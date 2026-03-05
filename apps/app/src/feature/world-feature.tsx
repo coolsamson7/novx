@@ -6,7 +6,7 @@ import {  Feature } from '@novx/portal';
   id: "world",
   i18n: "world",
   path: "/world",
-  icon: "shell:add",
+  icon: "home",
   description: "world",
   tags: ["menu"],
   permissions: [],

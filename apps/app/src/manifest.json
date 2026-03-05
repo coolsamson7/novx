@@ -58,7 +58,7 @@
       "component": "HelloFeature",
       "sourceFile": "apps/app/src/feature/world-feature.tsx",
       "i18n": "world",
-      "icon": "shell:add",
+      "icon": "home",
       "description": "world",
       "tags": [
         "menu"
@@ -78,10 +78,10 @@
       "component": "HomePage",
       "sourceFile": "apps/app/src/feature/home-feature.tsx",
       "i18n": "home",
-      "icon": "shell:add",
+      "icon": "home",
       "description": "home",
       "tags": [
-        ""
+        "menu"
       ],
       "permissions": [],
       "features": [],
@@ -98,7 +98,7 @@
       "component": "HelloFeature",
       "sourceFile": "apps/app/src/feature/hello-feature.tsx",
       "i18n": "hello",
-      "icon": "shell:add",
+      "icon": "home",
       "description": "hello",
       "tags": [
         "menu"

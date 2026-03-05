@@ -427,9 +427,9 @@ const styles = {
   id: "home",
   i18n: "home",
   path: "/",
-  icon: "shell:add",
+  icon: "home",
   description: "home",
-  tags: [""],
+  tags: ["menu"],
   permissions: [],
   features: [],
   visibility: ["private", "public"]

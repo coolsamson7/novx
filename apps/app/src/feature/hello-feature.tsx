@@ -8,7 +8,7 @@ import { Translator } from '@novx/i18n';
   id: "hello",
   i18n: "hello",
   path: "/hello",
-  icon: "shell:add",
+  icon: "home",
   description: "hello",
   tags: ["menu"],
   permissions: [],
