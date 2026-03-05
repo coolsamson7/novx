@@ -12,6 +12,7 @@ import './feature/world-feature'
 import { HomePage } from './feature/home-feature'
 import './navigation/private-navigation'
 import './navigation/public-navigation'
+import './navigation/login-feature'
 
 const home = HomePage
 

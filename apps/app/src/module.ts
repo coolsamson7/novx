@@ -260,7 +260,7 @@ export class ApplicationModule extends AbstractModule {
 
       routerManager.setRoot(() => (featureRegistry.finder()
         .withTag('portal')
-        .matchesSession(sessionManager.hasSession())
+        .withVisibility(sessionManager.hasSession() ? "private" : "public")
         .findOne()
       ))
   }

@@ -4,6 +4,8 @@ import {
   DeploymentManager,
   SessionManager,
   EnvironmentContext,
+  FeatureRegistry,
+  FeatureFinder,
 } from '@novx/portal';
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
@@ -77,11 +79,26 @@ export class PublicNavigationFeature extends React.Component<
 
   handleLoginLogout = async () => {
     const sessionManager = this.context.get(SessionManager);
+    const featureRegistry = this.context.get(FeatureRegistry);
+
     if (this.state.hasSession) {
       await sessionManager.closeSession();
     } else {
+
+      // find login feature
+      const loginFeature = featureRegistry.finder().withTag("login").findOptional()
+
+      if (loginFeature?.path) {
+        sessionStorage.setItem('intendedRoute', window.location.pathname);
+        window.location.href = loginFeature.path;
+        return;
+      }
+
+      // fallback (OIDC case without login feature)
+      
       await sessionManager.openSession();
     }
+
     this.updateSessionState();
   };
 

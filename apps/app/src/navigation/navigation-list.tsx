@@ -44,7 +44,7 @@ export const NavigationList: React.FC<NavigationListProps> = ({
       .finder()
       .withPath()
       .withoutParent()
-      .withVisibility(sessionManager.hasSession())
+      .matchesSession(sessionManager.hasSession())
       .withTag('menu')
       .find();
 
