@@ -1,6 +1,6 @@
 {
   "name": "@novx/core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "DI and AOP library",
   "homepage": "https://github.com/coolsamson7/novx",
   "repository": {
