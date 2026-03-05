@@ -89,9 +89,9 @@ export class DummyAuthentication implements Authentication<OIDCUser, any> {
    async authenticate(request: AuthenticationRequest): Promise<Session<OIDCUser, any>> {
     return {
       user: {
-        id: 'dummy-user',
-        username: 'dummy',
-        email: 'dummy@example.com',
+        id: request.username,
+        username: request.username,
+        email: request.username + '@example.com',
         roles: ['user'],
         given_name: '',
         family_name: '',

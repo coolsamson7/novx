@@ -1,8 +1,6 @@
 ### TODO
 
-- url geht nicht / Moudle wird nicht geladen!
-- stack fixen!!!
-- inherited environemnt FUCK!!!!! -> TyoeDesciptor is screed
+- url geht nicht, wrong port?????
 
 ### LATER
 
@@ -10,10 +8,29 @@
 
 ### NOW
 
+### RAECTIVE
 
+class Bla extends Controller { -> Command("foo")
+    @command()
+    foo() {
+      ...
+    }
+}
+
+class Aspects {
+   @around(methods()...)
+   void lockCommand(invocartion: Invcocation) {
+      ...
+   }
+}
+
+Der erste around müsste execute auf command sageb?
 
 ### DONE
 
+- integrate error handling?
+- integrate commands?
+- typedescriptor
 - microfrontebd???
 - pnpm
 - remount routes
