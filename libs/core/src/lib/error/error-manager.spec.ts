@@ -1,9 +1,6 @@
 import 'reflect-metadata';
 
 import { catchError, ErrorManager } from './error-manager';
-import { Environment } from '../di';
-//import { Environment } from '../environment';
-
 
 class Handler {
   // static
