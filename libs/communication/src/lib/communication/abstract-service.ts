@@ -5,7 +5,7 @@ import {Serialization} from "./serialization";
 
 export class EndpointLocator {
   /**
-   * return a base url for server calls
+   * return a base url for server callss
    * @param domain a domain name )
    */
   getEndpoint(domain: string): string {
