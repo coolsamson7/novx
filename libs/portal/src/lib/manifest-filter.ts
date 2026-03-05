@@ -3,9 +3,6 @@ import { ClientInfo, Manifest } from './model';
 
 export interface FilterContext {
   clientInfo: ClientInfo;
-
-  hasPermission(permission: string): boolean;
-  hasFeature(permission: string): boolean;
 }
 
 export interface ManifestFilter {
@@ -17,12 +14,16 @@ export interface FeatureFilter {
 }
 
 export class FeaturePermissionFilter implements FeatureFilter {
+  // constructor
+
+  constructor(private hasPermission : (permission: string) => boolean) {}
+
   // implement
 
   accept(feature: FeatureMetadata, context: FilterContext): boolean {
     if (feature.permissions)
       for (const permission of feature.permissions)
-        if (!context.hasPermission(permission))
+        if (!this.hasPermission(permission))
           return false
 
     return true
@@ -101,12 +102,16 @@ export class FeatureEnabledFilter implements FeatureFilter {
 }
 
 export class FeatureFeatureFilter implements FeatureFilter {
+  // constructor
+
+  constructor(private hasFeature : (feature: string) => boolean) {}
+
   // implement
 
   accept(feature: FeatureMetadata, context: FilterContext): boolean {
     if (feature.features != undefined)
       for (const f of feature.features)
-        if (!context.hasFeature(f))
+        if (!this.hasFeature(f))
           return false;
 
     return true;
@@ -122,6 +127,11 @@ export class ManifestEnabledFilter implements ManifestFilter {
   }
 }
 
+export interface ManifestProcessorOptions {
+  hasPermission?: (permission: string) => boolean
+  hasFeature?: (feature: string) => boolean
+}
+
 export class ManifestProcessor {
   // instance data
 
@@ -130,13 +140,13 @@ export class ManifestProcessor {
 
   // constructor
 
-  constructor() {
+  constructor(options : ManifestProcessorOptions = {}) {
     this.manifestFilters = [new ManifestEnabledFilter()];
     this.featureFilters = [
-      new FeaturePermissionFilter(),
+      new FeaturePermissionFilter(options.hasPermission ?? ((permission: string) => true)),
       new FeatureClientInfoFilter(),
       new FeatureEnabledFilter(),
-      new FeatureFeatureFilter()
+      new FeatureFeatureFilter(options.hasFeature ?? ((feature: string) => true))
     ];
   }
 

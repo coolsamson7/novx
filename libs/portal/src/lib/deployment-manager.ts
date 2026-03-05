@@ -46,8 +46,6 @@ export class DeploymentManager {
   private loader: DeploymentLoader
   private localManifest: Manifest
   private processor?: ManifestProcessor
-  private hasPermissionFn: (permission: string) => boolean
-  private hasFeatureFn: (feature: string) => boolean
 
   // constructor
 
