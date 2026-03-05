@@ -82,7 +82,7 @@ export class FeatureRegistry {
 
 export type FeatureFinderFilter = (feature: FeatureMetadata) => boolean
 
-class FeatureFinder {
+export class FeatureFinder {
   filter: FeatureFinderFilter[] = [];
 
   constructor(private registry: FeatureRegistry) {}
@@ -128,23 +128,32 @@ class FeatureFinder {
     return this;
   }
 
-  withVisibility(session: boolean): FeatureFinder {
-      if (session)
-        // When user is logged in, show both 'public' and 'private' features
-        this.filter.push((feature) => {
-          const visibility = feature.visibility || ["public", "private"];
-          return /*visibility.includes('public') ||*/ visibility.includes('private');
-        });
-      else
-        // When user is NOT logged in, show only 'public' features
-        this.filter.push((feature) =>
-          (feature.visibility || ['public']).includes('public'),
-        );
+  withVisibility(visibility: "public" | "private"): FeatureFinder {
+      this.filter.push((feature) => {
+        return ( feature.visibility || ["public", "private"]).includes(visibility);
+      });
 
       return this;
     }
 
   // find
+
+  findOptional(): FeatureMetadata | undefined {
+    const result = this.find();
+
+    if (result.length == 1) 
+      return result[0];
+
+    else if (result.length == 0) 
+      return undefined;
+
+    else throw new Error(
+        'expected 0 or 1 feature with filter' +
+          this.filter +
+          ', got ' +
+          result.length,
+      );
+  }
 
   findOne(): FeatureMetadata {
     const result = this.find();

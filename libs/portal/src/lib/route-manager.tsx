@@ -1,8 +1,7 @@
-
 import {injectable} from "@novx/core";
 import React from "react";
-import {BrowserRouter, RouteObject, useLocation, useRoutes} from "react-router-dom";
-import { FeatureRegistry } from './feature-registry';
+import {BrowserRouter, RouteObject, useLocation, useRoutes, Navigate} from "react-router-dom";
+import { FeatureRegistry, FeatureFinder } from './feature-registry';
 
 import type { FeatureMetadata } from './feature-registry';
 
@@ -14,8 +13,9 @@ import { ErrorPage } from "./component/error-page";
 
 // guard for private routes
 
-const PrivateRoute: React.FC<{ feature: FeatureMetadata; children: React.ReactNode }> = ({ feature, children }) => {
+const PrivateRoute: React.FC<{ feature: FeatureMetadata; loginPath?: string; children: React.ReactNode }> = ({ feature, loginPath, children }) => {
   const [sessionManager] = useInject(SessionManager);
+  const location = useLocation();
 
   const [hasSession, setHasSession] = React.useState(
     sessionManager.hasSession()
@@ -32,18 +32,30 @@ const PrivateRoute: React.FC<{ feature: FeatureMetadata; children: React.ReactNo
   }, [sessionManager]);
 
   React.useEffect(() => {
+
     const isActive = location.pathname === feature.path;
 
     if (!hasSession && isActive) {
-      sessionStorage.setItem('intendedRoute', window.location.pathname);
 
-      sessionManager.openSession().catch((err: any) => {
-        setError(err.message || 'Login failed');
-      });
+      sessionStorage.setItem('intendedRoute', location.pathname);
+
+      // If there is no internal login page, fall back to OIDC
+      if (!loginPath) {
+        sessionManager.openSession().catch((err: any) => {
+          setError(err.message || 'Login failed');
+        });
+      }
     }
-  }, [hasSession, feature.id]);
+
+  }, [hasSession, feature.id, location.pathname]);
 
   if (!hasSession) {
+
+    // Internal login page available
+    if (loginPath) {
+      return <Navigate to={loginPath} replace />;
+    }
+
     return <div>🔐 Verifying authentication...</div>;
   }
 
@@ -174,6 +186,12 @@ export class RouterManager {
 
     const hasSession = this.sessionManager.hasSession()
 
+    // Find login feature by tag
+
+    const loginFeature = new FeatureFinder(this.featureRegistry).withTag("login").findOptional();
+
+    const loginPath = loginFeature?.path ?? undefined;
+
     const features = this.featureRegistry.filter((feature) =>(
                 feature !== root &&
                 feature.path !== undefined &&
@@ -184,7 +202,7 @@ export class RouterManager {
       const isPrivate = feature.visibility && feature.visibility.includes('private') && !feature.visibility.includes('public');
 
       const element = (isPrivate && !hasSession) ? (
-        <PrivateRoute feature={feature}>
+        <PrivateRoute feature={feature} loginPath={loginPath}>
           <FeatureOutlet featureId={feature.id} />
         </PrivateRoute>
       ) : (
