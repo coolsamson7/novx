@@ -10,10 +10,11 @@ export class CommandDescriptor {
   // constructor
 
   constructor(
-    public readonly name: string,          // method name
+    public readonly name: string, 
     public readonly method: Function,
-    public readonly displayName?: string,  // optional UI name
-    public readonly shortcut?: string      // optional keyboard shortcut
+    public readonly label?: string,
+    public readonly i18n?: string,
+    public readonly shortcut?: string 
   ) {}
 
   // public
@@ -26,10 +27,12 @@ export class CommandDescriptor {
 
 export interface CommandOptions {
   name?: string
+  label?: string
+  i18n?: string
   shortcut?: string
 }
 
-export function command(options?: CommandOptions) {
+export function command(options: CommandOptions = {}) {
   return function (
     target: any,
     propertyKey: string | symbol,
@@ -56,14 +59,16 @@ export abstract class Controller {
     for (const method of descriptor.getMethods((m) => m.hasDecorator(command))) {
       const decorator = method.getDecorator(command)!
 
-      const options = decorator.arguments as CommandOptions | undefined
+      const options : CommandOptions = decorator.arguments[0]
+      const name = options.name ?? method.name
 
       this._commands.set(
-        method.name,
+        name,
         new CommandDescriptor(
-          method.name,
+          name,
           method.method,
-          options?.name,
+          options.label,
+          options.i18n,
           options?.shortcut
         )
       )
@@ -71,19 +76,11 @@ export abstract class Controller {
   }
 
   execute(name: string, ...args: any[]): any {
-    const cmd = this._command(name)
-    if (!cmd.enabled) 
-      return
-
-    let result: any
-    transaction(() => { result = (this as any)[name](...args) })
-    return result
+    return (this as any)[name](...args)
   }
 
-  enable(name: string, state = true)             { this._command(name).enabled = state }
-  disable(name: string)            { this._command(name).enabled = false }
-  isEnabled(name: string): boolean { return this._command(name).enabled }
-  commands(): string[]             { return [...this._commands.keys()] }
+  enable(name: string, state = true) { this._command(name).enabled = state }
+  isEnabled(name: string): boolean   { return this._command(name).enabled }
 
   // private
 
@@ -105,10 +102,9 @@ export class CommandAspects {
     const ctrl = invocation.target as Controller
     const name = invocation.method().name
 
-
-    ctrl.disable(name)
+    ctrl.enable(name, false)
     try {
-      return invocation.proceed()
+      return transaction(() => invocation.proceed())
     }
     finally {
       ctrl.enable(name)
@@ -120,9 +116,13 @@ export class CommandAspects {
     const ctrl = invocation.target as Controller
     const name = invocation.method().name
 
-    ctrl.disable(name)
+    ctrl.enable(name, false)
     try {
-      return await invocation.proceed()
+      const result = await invocation.proceed()
+
+      transaction(() => { /* noop */})
+
+      return result
     }
     finally {
       ctrl.enable(name)
