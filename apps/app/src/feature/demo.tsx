@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { useEffect, useRef, useState } from "react";
 import { Hands, Results } from "@mediapipe/hands";
 import { Camera } from "@mediapipe/camera_utils";
