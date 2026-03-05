@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 
-import { injectable, PostProcessor, TypeDescriptor  } from "@novx/core"
 import React from "react"
+import { injectable, TypeDescriptor } from "@novx/core"
+
+/* -------------------- Observable / Reaction -------------------- */
 
 type ReactionFn = () => void
-
 let currentReaction: Reaction | null = null
 
 export class ObservableValue<T = any> {
   private observers = new Set<Reaction>()
-
   constructor(private value: T) {}
 
   get(): T {
@@ -23,7 +23,7 @@ export class ObservableValue<T = any> {
   set(newValue: T) {
     if (this.value === newValue) return
     this.value = newValue
-    this.observers.forEach(r => r.schedule())
+    this.observers.forEach((r) => r.schedule())
   }
 
   removeObserver(r: Reaction) {
@@ -65,7 +65,7 @@ class Reaction {
   }
 
   cleanup() {
-    this.dependencies.forEach(dep => dep.removeObserver(this))
+    this.dependencies.forEach((dep) => dep.removeObserver(this))
     this.dependencies.clear()
   }
 }
@@ -74,7 +74,7 @@ export function autorun(fn: ReactionFn) {
   return new Reaction(fn)
 }
 
-// Transaction
+/* -------------------- Transaction / Batch -------------------- */
 
 let batchDepth = 0
 const pendingReactions = new Set<Reaction>()
@@ -93,61 +93,70 @@ export function transaction(fn: () => void): void {
   }
 }
 
-// Decorators
+/* -------------------- Decorators -------------------- */
 
 export function observable(target: any, propertyKey: string | symbol) {
-  TypeDescriptor.forType(target.constructor)
-    .addPropertyDecorator(target, propertyKey.toString(), observable)
+  TypeDescriptor.forType(target.constructor).addPropertyDecorator(
+    target,
+    propertyKey.toString(),
+    observable
+  )
 }
 
-export function computed(target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
-  TypeDescriptor
-    .forType(target.constructor)
-    .addMethodDecorator(target, propertyKey.toString(), computed)
-
+export function computed(
+  target: any,
+  propertyKey: string | symbol,
+  descriptor: PropertyDescriptor
+) {
+  TypeDescriptor.forType(target.constructor).addMethodDecorator(
+    target,
+    propertyKey.toString(),
+    computed
+  )
   return descriptor
 }
 
-export function action(target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
-  TypeDescriptor
-    .forType(target.constructor)
-    .addMethodDecorator(target, propertyKey.toString(), action)
-
+export function action(
+  target: any,
+  propertyKey: string | symbol,
+  descriptor: PropertyDescriptor
+) {
+  TypeDescriptor.forType(target.constructor).addMethodDecorator(
+    target,
+    propertyKey.toString(),
+    action
+  )
   return descriptor
 }
 
 export function reactive(target: any) {
   TypeDescriptor.forType(target).addDecorator(reactive)
-
   return target
 }
 
-// PostProcessor
+/* -------------------- Reactive PostProcessor -------------------- */
 
 @injectable({ module: "boot" })
-export class ReactivePostProcessor extends PostProcessor {
-  // implement
-
+export class ReactivePostProcessor {
   process(instance: any) {
     const descriptor = TypeDescriptor.forType(instance.constructor)
-
     if (descriptor.hasDecorator(reactive)) {
       this.makeObservables(instance, descriptor)
       this.makeComputed(instance, descriptor)
     }
   }
 
-  // private
-
   private makeObservables(instance: any, descriptor: TypeDescriptor<any>) {
     for (const field of descriptor.getFields()) {
       if (!field.hasDecorator(observable)) continue
-
       const observableValue = new ObservableValue(instance[field.name])
-
       Object.defineProperty(instance, field.name, {
-        get() { return observableValue.get() },
-        set(v) { observableValue.set(v) },
+        get() {
+          return observableValue.get()
+        },
+        set(v) {
+          observableValue.set(v)
+        },
         enumerable: true,
         configurable: true,
       })
@@ -157,13 +166,13 @@ export class ReactivePostProcessor extends PostProcessor {
   private makeComputed(instance: any, descriptor: TypeDescriptor<any>) {
     for (const method of descriptor.getMethods((m) => m.hasDecorator(computed))) {
       let cached: any
-
       const reaction = new Reaction(() => {
-        cached = (instance as any)[method.name]()
+        cached = instance[method.name]()
       })
-
       Object.defineProperty(instance, method.name, {
-        get() { return cached },
+        get() {
+          return cached
+        },
         enumerable: true,
         configurable: true,
       })
@@ -171,33 +180,106 @@ export class ReactivePostProcessor extends PostProcessor {
   }
 }
 
-/**
- * Call once at the top of any component that reads observables.
- * The component will automatically re-render when its reactive
- * dependencies change — no HOC or wrapper needed.
- *
- * @example
- * const CounterView = () => {
- *   useObserver()
- *   const counter = useLocalEnvironment().get(Counter)
- *   return <p>{counter.count}</p>
- * }
- */
-export function useObserver() {
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0)
+/* -------------------- Controller / Command -------------------- */
 
+export class CommandDescriptor {
+  private _enabled = new ObservableValue(true)
+  constructor(
+    public readonly name: string,
+    public readonly method: Function,
+    public readonly label?: string,
+    public readonly i18n?: string,
+    public readonly shortcut?: string
+  ) {}
+
+  get enabled() {
+    return this._enabled.get()
+  }
+
+  set enabled(v: boolean) {
+    this._enabled.set(v)
+  }
+}
+
+export interface CommandOptions {
+  name?: string
+  label?: string
+  i18n?: string
+  shortcut?: string
+}
+
+export function command(options: CommandOptions = {}) {
+  return function (target: any, propertyKey: string | symbol, _descriptor: PropertyDescriptor) {
+    TypeDescriptor.forType(target.constructor).addMethodDecorator(
+      target,
+      propertyKey.toString(),
+      command,
+      options
+    )
+  }
+}
+
+export abstract class Controller {
+  private _commands = new Map<string, CommandDescriptor>()
+
+  constructor() {
+    const descriptor = TypeDescriptor.forType(this.constructor as any)
+    for (const method of descriptor.getMethods((m) => m.hasDecorator(command))) {
+      const decorator = method.getDecorator(command)!
+      const options: CommandOptions = decorator.arguments[0]
+      const name = options.name ?? method.name
+      this._commands.set(
+        name,
+        new CommandDescriptor(
+          name,
+          method.method,
+          options.label,
+          options.i18n,
+          options.shortcut
+        )
+      )
+    }
+  }
+
+  execute(name: string, ...args: any[]): any {
+    return (this as any)[name](...args)
+  }
+
+  enable(name: string, state = true) {
+    this._command(name).enabled = state
+  }
+
+  isEnabled(name: string): boolean {
+    return this._command(name).enabled
+  }
+
+  private _command(name: string): CommandDescriptor {
+    const cmd = this._commands.get(name)
+    if (!cmd) throw new Error(`Unknown command "${name}"`)
+    return cmd
+  }
+}
+
+/* -------------------- React Hook -------------------- */
+
+export function useObserver(): void {
+  const [, forceUpdate] = React.useReducer((x) => x + 1, 0)
   const reactionRef = React.useRef<Reaction | null>(null)
-  if (!reactionRef.current) {
+
+  if (reactionRef.current === null) {
     reactionRef.current = new Reaction(() => forceUpdate(), false)
   }
 
   const reaction = reactionRef.current
   reaction.cleanup()
-  const prev = currentReaction
+
+  const prevReaction = currentReaction
   currentReaction = reaction
 
-  // Clear tracking after all synchronous observable reads in this render
-  queueMicrotask(() => { currentReaction = prev })
+  // Reset after all synchronous observable reads
+  queueMicrotask(() => {
+    currentReaction = prevReaction
+  })
 
   React.useEffect(() => () => reactionRef.current?.cleanup(), [])
 }
