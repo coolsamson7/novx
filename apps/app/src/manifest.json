@@ -2,15 +2,16 @@
   "id": "shell",
   "label": "Shell",
   "version": "1.0.0",
-  "preloadI18n": ["portal"],
   "features": [
     {
       "id": "public-navigation",
-      "preloadI18n": ["portal"],
       "label": "Navigation",
       "path": "/",
       "component": "PublicNavigationFeature",
       "sourceFile": "apps/app/src/navigation/public-navigation.tsx",
+      "preloadI18n": [
+        "portal"
+      ],
       "visibility": [
         "public"
       ],
@@ -21,11 +22,13 @@
     },
     {
       "id": "private-navigation",
-      "preloadI18n": ["portal"],
       "label": "Navigation",
       "path": "/",
       "component": "Navigation",
       "sourceFile": "apps/app/src/navigation/private-navigation.tsx",
+      "preloadI18n": [
+        "portal"
+      ],
       "visibility": [
         "private"
       ],
@@ -36,30 +39,13 @@
     },
     {
       "id": "world",
-      "i18n": "world",
+      "label": "",
       "path": "/world",
       "component": "HelloFeature",
       "sourceFile": "apps/app/src/feature/world-feature.tsx",
-      "icon": "add",
+      "i18n": "world",
+      "icon": "shell:add",
       "description": "world",
-      "tags": [
-        "menu"
-      ],
-      "permissions": [],
-      "features": [],
-      "visibility": [
-        "private"
-      ],
-      "children": []
-    },
-    {
-      "id": "hello",
-      "i18n": "hello",
-      "path": "/hello",
-      "component": "HelloFeature",
-      "sourceFile": "apps/app/src/feature/hello-feature.tsx",
-      "icon": "add",
-      "description": "hello",
       "tags": [
         "menu"
       ],
@@ -71,14 +57,35 @@
       ],
       "children": []
     },
-        {
+    {
       "id": "home",
-      "i18n": "home",
+      "label": "",
       "path": "/",
-      "component": "HomeFeature",
+      "component": "HomePage",
       "sourceFile": "apps/app/src/feature/home-feature.tsx",
-      "icon": "home",
+      "i18n": "home",
+      "icon": "shell:add",
       "description": "home",
+      "tags": [
+        ""
+      ],
+      "permissions": [],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
+    },
+    {
+      "id": "hello",
+      "label": "",
+      "path": "/hello",
+      "component": "HelloFeature",
+      "sourceFile": "apps/app/src/feature/hello-feature.tsx",
+      "i18n": "hello",
+      "icon": "shell:add",
+      "description": "hello",
       "tags": [
         "menu"
       ],

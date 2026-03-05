@@ -22,6 +22,7 @@ import {
   AuthenticationRequest,
   Controller,
   command,
+  OIDCAuthentication,
 } from '@novx/portal';
 
 import { applicationConfig } from "./environments/environments"
@@ -84,7 +85,7 @@ export class FooterTrace extends Trace {
 /**
  * No-op authentication service that returns a dummy user.
  */
-export class NoAuthenticationService implements Authentication<OIDCUser, any> {
+export class DummyAuthentication implements Authentication<OIDCUser, any> {
    async authenticate(request: AuthenticationRequest): Promise<Session<OIDCUser, any>> {
     return {
       user: {
@@ -182,7 +183,12 @@ class ApplicationConfigModule extends DIModule {
 export class ApplicationModule extends AbstractModule {
   @create()
   createSessionManager() : SessionManager<any,any> {
-    return new SessionManager(new NoAuthenticationService() /*KeycloakAuthenticationService()*/);
+    return new SessionManager(new DummyAuthentication() )
+    /*return new SessionManager(new OIDCAuthentication({
+       url: "http://localhost:8080",
+       realm: "service",
+       clientId: "service-browser"
+    }));*/
   }
 
   @create()
@@ -220,7 +226,10 @@ export class ApplicationModule extends AbstractModule {
         featureRegistry: featureRegistry,
         loader: loader,
         localManifest: manifest as Manifest,
-        processor: new ManifestProcessor()
+        processor: new ManifestProcessor({
+          hasFeature: (feature) => true,
+          hasPermission: (permission) => true
+        })
       });
   }
 

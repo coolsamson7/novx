@@ -24,6 +24,7 @@ const ReactiveOutlet: React.FC = () => {
 @Feature({
   id: 'private-navigation',
   label: 'Navigation',
+  preloadI18n: ['portal'],
   visibility: ['private'],
   tags: ['portal'],
   path: '/',

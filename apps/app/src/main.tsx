@@ -24,4 +24,4 @@ root.render(
     <EnvironmentContext.Provider value={environment}>
       <App />
     </EnvironmentContext.Provider>
-    );
+);
