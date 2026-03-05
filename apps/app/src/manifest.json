@@ -38,6 +38,20 @@
       "children": []
     },
     {
+      "id": "login",
+      "label": "",
+      "path": "/login",
+      "component": "LoginPage",
+      "sourceFile": "apps/app/src/navigation/login-feature.tsx",
+      "tags": [
+        "login"
+      ],
+      "visibility": [
+        "public"
+      ],
+      "children": []
+    },
+    {
       "id": "world",
       "label": "",
       "path": "/world",
