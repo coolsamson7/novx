@@ -53,10 +53,7 @@ export class DeploymentManager {
     this.featureRegistry = options.featureRegistry
     this.loader = options.loader
     this.localManifest = options.localManifest
-
     this.processor = options.processor
-    this.hasPermissionFn = options.hasPermission ?? ((permission: string) => true)
-    this.hasFeatureFn = options.hasPermission ?? ((feature: string) => true)
   }
 
   checkLazyFeatures(module: string, context : __WebpackModuleApi.RequireContext) {
@@ -134,9 +131,7 @@ export class DeploymentManager {
 
     if (this.processor) {
       const filterContext: FilterContext = {
-        clientInfo: this.clientInfo(),
-        hasPermission: this.hasPermissionFn || (() => true),
-        hasFeature: this.hasFeatureFn || (() => true),
+        clientInfo: this.clientInfo()
       };
 
       for (const moduleName in this.deployment.modules) {

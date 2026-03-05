@@ -12,6 +12,7 @@ export interface FeatureOptions {
   tags?: string[];
   features?: string[];
   visibility?: ('public' | 'private')[];
+  preloadI18n?: string[];
   i18n?: string;
   label?: string;
   path?: string;
