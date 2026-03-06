@@ -54,8 +54,8 @@ module.exports = {
       name: 'microfrontend',
       filename: 'remoteEntry.js',
       exposes: {
+        "./Module": "./apps/microfrontend/src/Module",
         "./MicrofrontendFeature": "./apps/microfrontend/src/feature",
-        './Module': './apps/microfrontend/src/Module',
       },
       shared: {
         "reflect-metadata": { singleton: true, eager: true, requiredVersion: false },
