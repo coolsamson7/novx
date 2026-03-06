@@ -8,10 +8,10 @@
 
 NOVX is a monorepo covering a number of Typescript and React solutions in individual packages
 
-- [core](https://github.com/coolsamson7/novx/tree/main/libs/core) a typescript dependency injection and aop solution
-- [i18n](https://github.com/coolsamson7/novx/tree/main/libs/i18n) a lightweight i18n solution
-- [communication](https://github.com/coolsamson7/novx/tree/main/libs/communication) base classes for REST calls based on Axios
-- [portal](https://github.com/coolsamson7/novx/tree/main/libs/portal) a react microfrontend framework 
+- [core](https://github.com/coolsamson7/novx/tree/main/libs/core#readme) a typescript dependency injection and aop solution
+- [i18n](https://github.com/coolsamson7/novx/tree/main/libs/i18n#readme) a lightweight i18n solution
+- [communication](https://github.com/coolsamson7/novx/tree/main/libs/communication#readme) base classes for REST calls based on Axios
+- [portal](https://github.com/coolsamson7/novx/tree/main/libs/portal#readme) a react microfrontend framework 
 
 ## Wiki
 
