@@ -206,10 +206,10 @@ export class RouterManager {
 
       const element = (isPrivate && !hasSession) ? (
         <PrivateRoute feature={feature} loginPath={loginPath}>
-          <FeatureOutlet featureId={feature.id} />
+          <FeatureOutlet id={feature.id} />
         </PrivateRoute>
       ) : (
-        <FeatureOutlet featureId={feature.id} />
+        <FeatureOutlet id={feature.id} />
       );
 
       // Strip leading slash from path to make it relative for nested routes
@@ -226,7 +226,7 @@ export class RouterManager {
     this.routeObjects = [
       {
         path: root.path || '',
-        element: <FeatureOutlet key={root.id} featureId={root.id} />,
+        element: <FeatureOutlet key={root.id} id={root.id} />,
         $feature: root,
         children: [
           ...features.map(build),

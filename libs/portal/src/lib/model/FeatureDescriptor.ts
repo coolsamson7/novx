@@ -9,7 +9,13 @@ import { schema, enumeration, oneOf, string, object, boolean, number, array, rec
 
 
 export interface FeatureDescriptor {
+  /**
+   * the id
+   */
   id: string;
+  /**
+   * optional i18n key
+   */
   i18n?: string;
   preloadI18n?: string[];
   label?: string;

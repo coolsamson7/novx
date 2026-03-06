@@ -52,7 +52,7 @@ export abstract class OutletLoader {
 }
 
 /**
- * Renders the UI associated with a specific feature.
+ * Renders a named feature.
  *
  * The component resolves the feature implementation dynamically
  * using the provided `featureId`.
@@ -62,7 +62,15 @@ export abstract class OutletLoader {
  * <FeatureOutlet featureId="user-profile" />
  * ```
  */
-export class FeatureOutlet extends React.Component<{ featureId: string }> {
+
+export interface FeatureOutletOptions {
+  /**
+   * the feature id
+   */
+ id: string
+}
+
+export class FeatureOutlet extends React.Component<FeatureOutletOptions> {
   state: {
     feature?: FeatureMetadata;
     Loaded?: React.ComponentClass<any>;
@@ -105,7 +113,7 @@ export class FeatureOutlet extends React.Component<{ featureId: string }> {
 
   async componentDidMount() {
     const featureRegistry = this.context.get(FeatureRegistry);
-    const feature = featureRegistry.get(this.props.featureId) as FeatureMetadata;
+    const feature = featureRegistry.get(this.props.id);
 
     try {
       await this.runLoaders(feature);

@@ -6,9 +6,17 @@
 import { schema, enumeration, oneOf, string, object, boolean, number, array, record, reference, date } from "@novx/core"
 
 
-
+/**
+ * coves the client characteristics of a device
+ */
 export interface ClientInfo {
+    /**
+     * width in px
+     */
     width: number
+    /**
+     * height in px
+     */
     height: number
     screen_size: string
     orientation: string

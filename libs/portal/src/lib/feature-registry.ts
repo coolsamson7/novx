@@ -3,6 +3,9 @@ import {FeatureDescriptor} from "./model";
 import { LocaleManager, Translator } from '@novx/i18n';
 import { of } from 'rxjs';
 
+/**
+ * this is a derived interface of {@linlk FeatureDescriptor} adding technical aspects.
+ */
 export interface FeatureMetadata extends FeatureDescriptor {
     parent?: string;
     children?: FeatureMetadata[];
@@ -11,7 +14,7 @@ export interface FeatureMetadata extends FeatureDescriptor {
 }
 
 /**
- * A `FeatureRegistry` is a registry for {@link Feature}s
+ * A `FeatureRegistry` is a registry for {@link FeatureMetadata}s
  */
 @injectable()
 export class FeatureRegistry {

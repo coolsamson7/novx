@@ -7,9 +7,17 @@ import { ClientInfo, ClientInfoSchema } from './ClientInfo'
 import { schema, enumeration, oneOf, string, object, boolean, number, array, record, reference, date } from "@novx/core"
 
 
-
+/**
+ * a {@link DeploymentRequest} covers the necessary information to compute a {@link Deployment}
+ */
 export interface DeploymentRequest {
+    /**
+     * the application name
+     */
     application: string
+    /**
+     * the {@link ClientInfo} of the requesting browser
+     */
     client: ClientInfo
 }
 
