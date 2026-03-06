@@ -361,10 +361,19 @@ export class FeatureMetadataScanner {
 
     // Build the exposes object from feature metadata
     const exposes: Record<string, string> = {};
+
+    // expose the module itself
+    if (data.moduleName && data.sourceFile) {
+      const modulePath = data.sourceFile.replace(/\.tsx?$/, "");
+      exposes[`./Module`] = `./${modulePath}`;
+    }
+
+    // expose all features
     if (data.features) {
       for (const feature of data.features) {
         const componentName = feature.component;
         const sourceFilePath = feature.sourceFile?.replace(/\.tsx?$/, "") || "";
+
         if (componentName && sourceFilePath) {
           exposes[`./${componentName}`] = `./${sourceFilePath}`;
         }
