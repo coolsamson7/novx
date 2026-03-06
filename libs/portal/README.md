@@ -87,7 +87,7 @@ import manifest from './manifest.json';
 export class ApplicationModule extends AbstractModule {
   @create()
   createSessionManager() : SessionManager<any,any> {
-    return new SessionManager(new DummyAuthenticationService()); // for now, would be OIDC in reality
+    return new SessionManager(new DummyAuthentication()); // for now, would be OIDC in reality
   }
 
   @create()
@@ -187,8 +187,7 @@ but can rely on a couple of conventions to list the available routes.
 Example:
 
 ```ts
-const features = featureRegistry
-    .finder()
+const features = featureRegistry.finder()
     .withPath()
     .withoutParent()
     .matchingSession(sessionManager.hasSession())
@@ -222,6 +221,9 @@ A showcase app shows a shell and a microfreontend.
 
 <img width="2634" height="1852" alt="image" src="https://github.com/user-attachments/assets/b5886a58-2e9a-4196-b0ae-d60f62587fcc" />
 
+## Wiki
+
+More detailed information can be found [here](https://github.com/coolsamson7/novx/wiki/Portal)
 
 ## API Docs
 
