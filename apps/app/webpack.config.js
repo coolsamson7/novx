@@ -42,6 +42,12 @@ module.exports = {
             type: "asset/source",
           },
 
+        // ✅ TS/TSX in showcases → raw text
+{
+  test: /\.(tsx?|ts|txt|css|json)$/, // add any other extensions you want as raw
+  resourceQuery: /raw/,               // only imports with '?raw'
+  type: 'asset/source',               // returns raw string
+},
           // ✅ TS / TSX
           {
             test: /\.tsx?$/,

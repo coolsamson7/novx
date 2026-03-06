@@ -4,6 +4,41 @@
   "version": "1.0.0",
   "features": [
     {
+      "id": "showcase-page",
+      "label": "Showcases",
+      "path": "/showcases",
+      "component": "ShowcasePage",
+      "sourceFile": "apps/app/src/showcase.tsx",
+      "tags": [
+        "menu"
+      ],
+      "visibility": [
+        "public"
+      ],
+      "children": []
+    },
+    {
+      "id": "showcase",
+      "label": "",
+      "path": "/showcase",
+      "component": "ShowcaseFeature",
+      "sourceFile": "apps/app/src/showcases/showcase-feature.tsx",
+      "i18n": "showcase",
+      "icon": "home",
+      "description": "showcase",
+      "tags": [
+        "menu",
+        "showcase"
+      ],
+      "permissions": [],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
+    },
+    {
       "id": "public-navigation",
       "label": "Navigation",
       "path": "/",
