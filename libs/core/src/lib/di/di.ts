@@ -602,18 +602,26 @@ export function onDestroy(): MethodDecorator {
 
 
 
-/**
- * This annotation is used to mark classes that control the discovery process of injectables
- */
+
 
 export interface ModuleOptions {
+  /**
+   * the name of the module, or "" if not supplied
+   */
    name?: string;
+   /**
+    * optional list iof imported moudes
+    */
    imports?: any[];
+   // internal actually
    register?: boolean;
    type?: any;
    accepts?: Set<string>
 }
 
+/**
+ * Base class for module classes.
+ */
 export class Module {
   static resolved = false
   static byType: Map<any, ModuleOptions> = new Map();
@@ -683,6 +691,11 @@ export class Module {
   }
 }
 
+/**
+ * registers the corresponding class as a moudle that is the basis for instance creation.
+ * @param options moudle options
+ * @returns 
+ */
 export function module(options: ModuleOptions = {}): ClassDecorator {
   return (target: any) => {
     options.type = target
@@ -1438,11 +1451,15 @@ class ResolveContext {
 /**
  * Environment configuration options
  */
-
 interface EnvironmentOptions {
-   module?: any;
-   features?: string[];
-   parent?: Environment
+  /**
+   * the module class which is the basis for instance creation
+   */
+  module?: any;
+  /**
+   * oprional parent environment
+   */
+  parent?: Environment
 }
 
 export enum EnvironmentState {
@@ -1452,7 +1469,7 @@ export enum EnvironmentState {
 }
 
 /**
- * Environment is th emain DI container.
+ * Environment is the main DI container.
  */
 export class Environment {
   // static data
@@ -1466,7 +1483,6 @@ export class Environment {
   private providers: Map<any, AbstractInstanceProvider<any>> = new Map();
   private lifecycleProcessors: LifecycleProcessor[] = [];
   private instances: any[] = [];
-  private features: string[] = [];
   parent: Environment | null;
 
   // constructor
@@ -1474,12 +1490,10 @@ export class Environment {
   /**
    * Creates a new Environment instance
    *
-   * @param env The environment class that controls scanning of managed objects
-   * @param features Optional list of feature flags
-   * @param parent Optional parent environment, whose objects are inherited
+   * @param options environment options
    */
   constructor(options: EnvironmentOptions = {}) {
-    const { module, features = [], parent = null  } = options;
+    const { module, parent = null  } = options;
 
     Module.resolve();
 
@@ -1505,7 +1519,6 @@ export class Environment {
     }
 
     const start = performance.now();
-    this.features = [...features];
 
     if (this.parent) {
       // inherit providers from parent
@@ -1574,13 +1587,6 @@ export class Environment {
     const filteredProviders = Providers.filter(this, filterProvider);
 
     this.providers = new Map([...this.providers, ...filteredProviders]);
-  }
-
-  /**
-   * Check if a feature is enabled
-   */
-  hasFeature(feature: string): boolean {
-    return this.features.includes(feature);
   }
 
   /**
@@ -1751,7 +1757,10 @@ export class Environment {
 
   /**
    * Get an instance of the specified type
-   */
+   * @typeParam T the type
+   * @param type the desired type
+   * @returns the instance 
+    */
   get<T>(type: new(...args: any[]) => T): T {
     const provider = this.providers.get(type as any);
 
