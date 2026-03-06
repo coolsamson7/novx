@@ -51,8 +51,17 @@ export abstract class OutletLoader {
   abstract run(feature: FeatureMetadata, outlet: FeatureOutlet): Promise<void>;
 }
 
-// feature outlet
-
+/**
+ * Renders the UI associated with a specific feature.
+ *
+ * The component resolves the feature implementation dynamically
+ * using the provided `featureId`.
+ *
+ * @example
+ * ```tsx
+ * <FeatureOutlet featureId="user-profile" />
+ * ```
+ */
 export class FeatureOutlet extends React.Component<{ featureId: string }> {
   state: {
     feature?: FeatureMetadata;

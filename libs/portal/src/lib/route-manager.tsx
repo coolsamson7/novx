@@ -134,10 +134,9 @@ const RoutesWrapper: React.FC<{ manager: RouterManager }> = ({ manager }) => {
   return useRoutes(routes);
 };
 
-/* ======================================================
- * RouterManager
- * ====================================================== */
-
+/**
+ * A `RouteManager` is responsible to setup routes dynamically given a filled {@link FeatureRegistry}
+ */
 @injectable()
 export class RouterManager {
   // instance data — made accessible to RoutesWrapper above
@@ -159,6 +158,10 @@ export class RouterManager {
 
   // public
 
+  /**
+   * set a function that computes the root of the route tree.
+   * @param root the function
+   */
   setRoot(root: () => FeatureMetadata) {
     this.computeRoot = root;
     this.root = root();

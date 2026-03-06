@@ -1,7 +1,14 @@
 import { FeatureMetadata } from './feature-registry';
 import { ClientInfo, Manifest } from './model';
 
+
+/**
+ * a context that will be used by the different {@link FeatureFilter}
+ */
 export interface FilterContext {
+  /**
+   * the {@link ClientInfo}
+   */
   clientInfo: ClientInfo;
 }
 
@@ -9,7 +16,15 @@ export interface ManifestFilter {
   accept(manifest: Manifest, context: FilterContext) : boolean
 }
 
+/**
+ * a `FeatureFilter` is used to filter {@link FeatureMetadata}
+ */
 export interface FeatureFilter {
+  /**
+   * return `true`, if the specified feature is accpeted.
+   * @param feature the {@link FeatureMetadata}
+   * @param context the {@link FilterContext}
+   */
   accept(feature: FeatureMetadata, context: FilterContext): boolean;
 }
 
@@ -127,11 +142,25 @@ export class ManifestEnabledFilter implements ManifestFilter {
   }
 }
 
+/**
+ * options for the {@link ManifestProcessor}
+ */
 export interface ManifestProcessorOptions {
+  /**
+   * a function that returns `true`, if a given permission is assigend to the current session
+   * @param permission the permission name
+   */
   hasPermission?: (permission: string) => boolean
+   /**
+   * a function that returns `true`, if a given feature flag is assigend to the current session
+   * @param feature the feature flag name
+   */
   hasFeature?: (feature: string) => boolean
 }
 
+/**
+ * A `ManifestProcessor` is used to filter features given a deployment.
+ */
 export class ManifestProcessor {
   // instance data
 
@@ -140,6 +169,10 @@ export class ManifestProcessor {
 
   // constructor
 
+  /**
+   *  create a new {@link ManifestProcessor}
+   * @param options {@link ManifestProcessorOptions}
+   */
   constructor(options : ManifestProcessorOptions = {}) {
     this.manifestFilters = [new ManifestEnabledFilter()];
     this.featureFilters = [
@@ -152,6 +185,12 @@ export class ManifestProcessor {
 
   // public
 
+  /**
+   * process the given {@link Manifest} and return the filtered copy.
+   * @param manifest the  {@link Manifest}
+   * @param context a {@link FilterContext}
+   * @returns the copy
+   */
   process(manifest: Manifest, context: FilterContext): Manifest {
     // First, check if the manifest itself passes all manifest filters
     for (const filter of this.manifestFilters) {

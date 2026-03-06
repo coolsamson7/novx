@@ -10,6 +10,9 @@ export interface FeatureMetadata extends FeatureDescriptor {
     module?: string; // module name inside remote
 }
 
+/**
+ * A `FeatureRegistry` is a registry for {@link Feature}s
+ */
 @injectable()
 export class FeatureRegistry {
     // instance data
@@ -64,17 +67,33 @@ export class FeatureRegistry {
         features.forEach(f => register(f));
     }
 
+    /**
+     * 
+     * @param f filter the features given a {@link FeatureFinderFilter}
+     * @returns the resulting features
+     */
     filter(f: FeatureFinderFilter): FeatureMetadata[] {
         return Array.from(this.features.values()).filter(f)
     }
 
+    /**
+     * return a {@link FeatureFinder} that can be used to filter features with a fluent language
+     * @returns  the finder
+     */
     finder(): FeatureFinder {
         return new FeatureFinder(this);
     }
 
-    get(id: string) {
+    /**
+     * Return a named feature
+     * @param id the id
+     * @returns  the feature
+     */
+    get(id: string) : FeatureMetadata {
         const f = this.features.get(id);
-        if (!f) throw new Error(`Feature ${id} not found`);
+        if (!f)
+           throw new Error(`Feature ${id} not found`);
+
         return f;
     }
 }

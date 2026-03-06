@@ -9,7 +9,15 @@ import { FeatureRegistry } from './feature-registry';
 import { FilterContext, ManifestProcessor } from './manifest-filter';
 import { ComponentRegistry } from './component-registry';
 
+/**
+ * a `DeploymentLoader` is able to load a {@link Deployment} given a {@link DeploymentRequest}
+ */
 export abstract class DeploymentLoader {
+  /**
+   * load a {@link Deployment} 
+   * @param request a {@link DeploymentRequest}
+   * @returns the {@link Deployment}
+   */
   abstract load(request: DeploymentRequest): Promise<Deployment>;
 }
 
@@ -27,16 +35,31 @@ export function toWebpackContextKey(path: string): string {
   return `./${relative}`;
 }
 
+/**
+ * options for the {@link DeploymentManager}
+ */
 export interface DeploymentManagerOptions {
+  /**
+  * the  {@link FeatureRegistry}
+  */
   featureRegistry: FeatureRegistry,
+  /**
+   * the {@link DeploymentLoader}
+   */
   loader: DeploymentLoader,
+  /**
+   * the lcoal {@link Manifest}
+   */
   localManifest: Manifest,
-
-  processor?: ManifestProcessor,
-  hasPermission?: (permission: string) => boolean,
-  hasFeature?: (feature: string) => boolean,
+  /**
+   * an optional {@link ManifestProcessor} used to filter features
+   */
+  processor?: ManifestProcessor
 }
 
+/**
+ * A `DeploymentManager` is responsible to compute a {@link Deployment} for a an applciation
+ */
 export class DeploymentManager {
   // instance data
 
@@ -49,6 +72,10 @@ export class DeploymentManager {
 
   // constructor
 
+  /**
+   * create a new {@link DeploymentManager}
+   * @param options possible options
+   */
   constructor(options : DeploymentManagerOptions) {
     this.featureRegistry = options.featureRegistry
     this.loader = options.loader
@@ -93,6 +120,10 @@ export class DeploymentManager {
       this.getModule(module).loaded = true;
   }
 
+  /**
+   * 
+   * @returns return the computed {@link DeploymentRequest}
+   */
   getDeployment(): Deployment {
     if ( this.deployment )
       return this.deployment;
@@ -108,10 +139,19 @@ export class DeploymentManager {
     throw new Error(`module ${module} not found`);
   }
 
+  /**
+   * 
+   * @returns return the {@link ClientInfo} of this application
+   */
   clientInfo(): ClientInfo {
     return detectClient();
   }
 
+  /**
+   * 
+   * @param request load a deployment given a {@link DeploymentRequest}
+   * @returns the {@link Deployment}
+   */
   async loadDeployment(request: DeploymentRequest): Promise<Deployment> {
     if (Tracer.ENABLED)
       Tracer.Trace(
