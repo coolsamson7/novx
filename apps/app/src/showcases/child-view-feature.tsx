@@ -35,7 +35,7 @@ function UserListContent() {
         {USERS.map(user => (
           <div
             key={user.id}
-            onClick={() => navigate(`/users/${user.id}`)}
+            onClick={() => navigate(String(user.id))}
             style={{
               padding: "10px 16px",
               cursor: "pointer",
@@ -61,9 +61,9 @@ function UserListContent() {
 
 @Feature({
   id: "users",
-  path: "users",
-  label: "users",
   parent: "showcases",
+  label: "Users",
+  path: "/users",
   tags: ["showcase"],
   visibility: ["public"],
 })

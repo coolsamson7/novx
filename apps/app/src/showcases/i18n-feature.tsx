@@ -20,7 +20,7 @@ class I18NFeature extends React.Component {
         margin: '24px',
         textAlign: 'center'
       }}>
-      Showcase
+      I18N
     </div>;
   }
 }

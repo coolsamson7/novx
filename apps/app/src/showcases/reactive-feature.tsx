@@ -20,7 +20,7 @@ class ReactiveFeature extends React.Component {
         margin: '24px',
         textAlign: 'center'
       }}>
-      Showcase
+      Reactive
     </div>;
   }
 }

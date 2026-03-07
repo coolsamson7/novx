@@ -21,7 +21,7 @@ class EnvironmentFeature extends React.Component {
         margin: '24px',
         textAlign: 'center'
       }}>
-      Showcase
+      Environment
     </div>;
   }
 }
