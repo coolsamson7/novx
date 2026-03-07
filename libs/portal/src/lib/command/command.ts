@@ -3,7 +3,7 @@ import { injectable, TypeDescriptor, Invocation, around, methods  } from "@novx/
 import { ObservableValue, transaction } from "../reactive"
 
 export class CommandDescriptor {
-  // instance data
+  // instance datac
 
   private _enabled = new ObservableValue(true)
 
