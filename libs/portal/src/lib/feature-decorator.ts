@@ -78,7 +78,7 @@ export function Feature(opts: FeatureOptions) {
 
     // is done via the deployment manager featureRegistry.register([featureMeta]);
 
-    ComponentRegistry.register(fqn, async () => ({ default: cls }));
+    ComponentRegistry.register(opts.id, async () => ({ default: cls }), { parent: opts.parent });
 
     // done
 
