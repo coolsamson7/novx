@@ -417,10 +417,10 @@ export class ShowcaseRegistry {
 --------------------------- */
 
 @Feature({
-  id: "showcase-page",
+  id: "showcases",
   label: "Showcases",
   path: "/showcases",
-  tags: ["showcase"],
+  tags: ["menu"],
   visibility: ["public"],
 })
 export class ShowcasePage extends React.Component {

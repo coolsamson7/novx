@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "features": [
     {
-      "id": "showcase-page",
+      "id": "showcases",
       "label": "Showcases",
       "path": "/showcases",
       "component": "ShowcasePage",
@@ -15,28 +15,133 @@
       "visibility": [
         "public"
       ],
-      "children": []
-    },
-    {
-      "id": "showcase",
-      "label": "",
-      "path": "/showcase",
-      "component": "ShowcaseFeature",
-      "sourceFile": "apps/app/src/showcases/showcase-feature.tsx",
-      "i18n": "showcase",
-      "icon": "home",
-      "description": "showcase",
-      "tags": [
-        "menu",
-        "showcase"
-      ],
-      "permissions": [],
-      "features": [],
-      "visibility": [
-        "private",
-        "public"
-      ],
-      "children": []
+      "children": [
+        {
+          "id": "showcase",
+          "label": "",
+          "path": "showcase",
+          "component": "ShowcaseFeature",
+          "sourceFile": "apps/app/src/showcases/showcase-feature.tsx",
+          "parent": "showcases",
+          "description": "showcase",
+          "tags": [
+            "showcase"
+          ],
+          "permissions": [],
+          "features": [],
+          "visibility": [
+            "private",
+            "public"
+          ],
+          "children": []
+        },
+        {
+          "id": "reactive",
+          "label": "",
+          "path": "reactive",
+          "component": "ReactiveFeature",
+          "sourceFile": "apps/app/src/showcases/reactive-feature.tsx",
+          "parent": "showcases",
+          "description": "reactive",
+          "tags": [
+            "showcase"
+          ],
+          "permissions": [],
+          "features": [],
+          "visibility": [
+            "private",
+            "public"
+          ],
+          "children": []
+        },
+        {
+          "id": "inspector",
+          "label": "",
+          "path": "/inspector",
+          "component": "HomePage",
+          "sourceFile": "apps/app/src/showcases/inspector-feature.tsx",
+          "parent": "showcases",
+          "icon": "home",
+          "description": "inspector",
+          "tags": [
+            "showcase"
+          ],
+          "permissions": [],
+          "features": [],
+          "visibility": [
+            "private",
+            "public"
+          ],
+          "children": []
+        },
+        {
+          "id": "i18n",
+          "label": "",
+          "path": "i18n",
+          "component": "I18NFeature",
+          "sourceFile": "apps/app/src/showcases/i18n-feature.tsx",
+          "parent": "showcases",
+          "description": "i18n",
+          "tags": [
+            "showcase"
+          ],
+          "permissions": [],
+          "features": [],
+          "visibility": [
+            "private",
+            "public"
+          ],
+          "children": []
+        },
+        {
+          "id": "environment",
+          "label": "",
+          "path": "environment",
+          "component": "EnvironmentFeature",
+          "sourceFile": "apps/app/src/showcases/environment-feature.tsx",
+          "parent": "showcases",
+          "icon": "home",
+          "description": "environment",
+          "tags": [
+            "showcase"
+          ],
+          "permissions": [],
+          "features": [],
+          "visibility": [
+            "private",
+            "public"
+          ],
+          "children": []
+        },
+        {
+          "id": "users",
+          "label": "users",
+          "path": "users",
+          "component": "UserList",
+          "sourceFile": "apps/app/src/showcases/child-view-feature.tsx",
+          "parent": "showcases",
+          "tags": [
+            "showcase"
+          ],
+          "visibility": [
+            "public"
+          ],
+          "children": [
+            {
+              "id": "user-detail",
+              "label": "User Detail",
+              "path": ":userId",
+              "component": "UserDetail",
+              "sourceFile": "apps/app/src/showcases/child-view-feature.tsx",
+              "parent": "users",
+              "visibility": [
+                "public"
+              ],
+              "children": []
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "public-navigation",

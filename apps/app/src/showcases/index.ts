@@ -1,1 +1,6 @@
+export * from "./child-view-feature"
+export * from "./environment-feature"
+export * from "./i18n-feature"
+export * from "./reactive-feature"
+export * from "./inspector-feature"
 export * from "./showcase-feature"

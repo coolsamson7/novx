@@ -3,16 +3,17 @@ import React from 'react';
 import { Feature } from '@novx/portal';
 
 @Feature({
-  id: "showcase",
-  path: "showcase",
+  id: "environment",
+  path: "environment",
   parent: "showcases",
-  description: "showcase",
+  icon: "home",
+  description: "environment",
   tags: ["showcase"],
   permissions: [],
   features: [],
   visibility: ["private", "public"]
 })
-class ShowcaseFeature extends React.Component {
+class EnvironmentFeature extends React.Component {
   render() {
     return <div  style={{
         fontSize: '32px',
