@@ -474,9 +474,8 @@ const ShowcasePageContent: React.FC = () => {
 
   const location = useLocation();
 
-  const selectedId =
-    location.pathname.replace("/showcases/", "") || undefined;
-
+  //const selectedId =location.pathname.replace("/showcases/", "") || undefined;
+const selectedId = location.pathname.split("/")[2] || undefined;
   const navigate = useNavigate();
 
 
