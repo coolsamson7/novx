@@ -38,7 +38,10 @@ jobs:
         run: pnpm run docs
 
       - name: Copy App
-        run: cp -R apps/app/dist/* dist/docs/sample
+        run: |
+          mkdir -p dist/docs/sample
+          cp -R apps/app/dist/* dist/docs/sample/
+          echo "✅ Nx app copied into docs/sample"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
