@@ -1,4 +1,4 @@
-name: Publish Docs
+name: Publish Docs + App
 
 on:
   push:
@@ -31,13 +31,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate docs
+      # Build your Nx app
+      - name: Build Nx App
+        run: pnpm nx build app
+
+      # Generate docs
+      - name: Generate Docs
         run: pnpm run docs
 
-      - name: Upload artifact
+      # Prepare combined output folder
+      - name: Prepare Pages Artifact
+        run: |
+          rm -rf pages-artifact
+          mkdir -p pages-artifact/docs
+          mkdir -p pages-artifact/docs/sample
+          # Copy generated docs
+          cp -R dist/docs/* pages-artifact/docs/
+          # Copy Nx app build
+          cp -R apps/app/dist/* pages-artifact/docs/sample/
+
+      # Upload everything as artifact for Pages
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/docs
+          path: pages-artifact
 
   deploy:
     needs: build
