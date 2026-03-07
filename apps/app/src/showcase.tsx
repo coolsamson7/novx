@@ -6,6 +6,7 @@ import {
   FeatureOutlet,
   useEnvironment,
 } from "@novx/portal";
+import { useNavigate, useParams, Outlet } from "react-router-dom";
 
 /* ---------------------------
    Styles
@@ -239,37 +240,6 @@ const styles = `
     box-sizing: border-box;
   }
 
-  /* Divider */
-  .sc-divider {
-    height: 1px;
-    background: var(--border);
-    flex-shrink: 0;
-    position: relative;
-  }
-
-  .sc-divider-label {
-    position: absolute;
-    top: 50%;
-    left: 1.25rem;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--bg);
-    padding: 0 0.5rem;
-    font-size: 0.62rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .sc-divider-dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-
   /* Code pane */
   .sc-code-pane {
     height: 45%;
@@ -413,23 +383,6 @@ export class ShowcaseRegistry {
 }
 
 /* ---------------------------
-   Showcase Feature
---------------------------- */
-
-@Feature({
-  id: "showcases",
-  label: "Showcases",
-  path: "/showcases",
-  tags: ["menu"],
-  visibility: ["public"],
-})
-export class ShowcasePage extends React.Component {
-  render() {
-    return <ShowcasePageContent />;
-  }
-}
-
-/* ---------------------------
    Icons
 --------------------------- */
 
@@ -461,42 +414,26 @@ const IconSplit = () => (
 );
 
 /* ---------------------------
-   Page Content
+   PARENT — /showcases
+   Sidebar + Outlet
 --------------------------- */
 
 const ShowcasePageContent: React.FC = () => {
+  const navigate = useNavigate();
+  const { showcaseId } = useParams<{ showcaseId: string }>();
   const env = useEnvironment();
   const featureRegistry = env.get(FeatureRegistry);
-  const showcaseRegistry = env.get(ShowcaseRegistry);
-
   const showcases = featureRegistry.finder().withTag("showcase").find();
-  const [selectedId, setSelectedId] = useState(
-    showcases.length > 0 ? showcases[0].id : ""
-  );
-  const [view, setView] = useState<"split" | "preview" | "code">("split");
-
-  const selectedShowcase = showcases.find((s) => s.id === selectedId);
-  const source = selectedShowcase?.sourceFile
-    ? showcaseRegistry.getLoadedSource(selectedShowcase.sourceFile)
-    : "";
-
-  const selectedLabel = selectedShowcase?.label || selectedShowcase?.id || "";
-
-  const showPreview = view === "split" || view === "preview";
-  const showCode    = view === "split" || view === "code";
 
   return (
     <>
       <style>{styles}</style>
       <div className="sc-root">
 
-        {/* ── Sidebar ── */}
         <aside className="sc-sidebar">
           <div className="sc-sidebar-header">
             <div className="sc-logo">
-              <div className="sc-logo-mark">
-                <IconBox />
-              </div>
+              <div className="sc-logo-mark"><IconBox /></div>
               <span className="sc-logo-text">Showcase</span>
             </div>
             <span className="sc-badge">{showcases.length} components</span>
@@ -508,8 +445,8 @@ const ShowcasePageContent: React.FC = () => {
             {showcases.map((s) => (
               <div
                 key={s.id}
-                className={`sc-item ${s.id === selectedId ? "active" : ""}`}
-                onClick={() => setSelectedId(s.id)}
+                className={`sc-item ${s.id === showcaseId ? "active" : ""}`}
+                onClick={() => navigate(s.path!.replace(/^\//, ""))}
               >
                 <span className="sc-item-dot" />
                 {s.label || s.id}
@@ -518,97 +455,141 @@ const ShowcasePageContent: React.FC = () => {
           </div>
         </aside>
 
-        {/* ── Main ── */}
         <main className="sc-main">
-
-          {/* Topbar */}
-          <div className="sc-topbar">
-            <div className="sc-breadcrumb">
-              Showcases
-              <span className="sc-breadcrumb-sep">/</span>
-              <span>{selectedLabel || "—"}</span>
-            </div>
-            <div className="sc-topbar-actions">
-              <button
-                className={`sc-tab-btn ${view === "preview" ? "active" : ""}`}
-                onClick={() => setView("preview")}
-                title="Preview only"
-              >
-                <IconEye /> Preview
-              </button>
-              <button
-                className={`sc-tab-btn ${view === "split" ? "active" : ""}`}
-                onClick={() => setView("split")}
-                title="Split view"
-              >
-                <IconSplit /> Split
-              </button>
-              <button
-                className={`sc-tab-btn ${view === "code" ? "active" : ""}`}
-                onClick={() => setView("code")}
-                title="Code only"
-              >
-                <IconCode /> Code
-              </button>
-            </div>
-          </div>
-
-          {/* Body */}
-          {selectedId ? (
-            <div className={`sc-body ${view}`}>
-
-              {/* Live preview */}
-              {showPreview && (
-                <div className="sc-preview-pane">
-                  <span className="sc-preview-label">Live preview</span>
-                  <div className="sc-preview-inner" key={selectedId + "-preview"}>
-                    <FeatureOutlet id={selectedId} />
-                  </div>
-                </div>
-              )}
-
-              {/* Source code */}
-              {showCode && source && (
-                <div className="sc-code-pane">
-                  <div className="sc-code-toolbar">
-                    <div className="sc-code-toolbar-dots">
-                      <div className="sc-code-dot sc-code-dot-r" />
-                      <div className="sc-code-dot sc-code-dot-y" />
-                      <div className="sc-code-dot sc-code-dot-g" />
-                    </div>
-                    <span className="sc-code-filename">
-                      {selectedShowcase?.sourceFile?.split("/").pop() ?? "source.tsx"}
-                    </span>
-                    <span className="sc-code-lang">TSX</span>
-                  </div>
-                  <div className="sc-code-scroll" key={selectedId + "-code"}>
-                    <pre className="sc-code">{source}</pre>
-                  </div>
-                </div>
-              )}
-
-              {/* Code selected but no source */}
-              {showCode && !source && (
-                <div className="sc-empty" style={{ flex: 1 }}>
-                  <div className="sc-empty-icon">
-                    <IconCode />
-                  </div>
-                  <span>No source available</span>
-                </div>
-              )}
-
-            </div>
-          ) : (
-            <div className="sc-empty">
-              <div className="sc-empty-icon">
-                <IconBox />
-              </div>
-              <span>Select a component from the sidebar</span>
-            </div>
-          )}
-
+          <Outlet />
         </main>
+
       </div>
     </>
   );
 };
+
+@Feature({
+  id: "showcases",
+  label: "Showcases",
+  path: "/showcases",
+  tags: ["menu"],
+  visibility: ["public"],
+})
+export class ShowcasePage extends React.Component {
+  render() { return <ShowcasePageContent />; }
+}
+
+/* ---------------------------
+   CHILD — /showcases/:showcaseId
+   Topbar + preview + code (unchanged from original body)
+--------------------------- */
+
+const ShowcaseDetailContent: React.FC = () => {
+  const { showcaseId } = useParams<{ showcaseId: string }>();
+  const [view, setView] = useState<"split" | "preview" | "code">("split");
+  const env = useEnvironment();
+  const featureRegistry = env.get(FeatureRegistry);
+  const showcaseRegistry = env.get(ShowcaseRegistry);
+
+  const selectedShowcase = featureRegistry.finder().withTag("showcase").find()
+    .find((s) => s.id === showcaseId);
+
+  const source = selectedShowcase?.sourceFile
+    ? showcaseRegistry.getLoadedSource(selectedShowcase.sourceFile)
+    : "";
+
+  const selectedLabel = selectedShowcase?.label || selectedShowcase?.id || "";
+
+  const showPreview = view === "split" || view === "preview";
+  const showCode    = view === "split" || view === "code";
+
+  if (!selectedShowcase) return (
+    <div className="sc-empty">
+      <div className="sc-empty-icon"><IconBox /></div>
+      <span>Select a component from the sidebar</span>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Topbar */}
+      <div className="sc-topbar">
+        <div className="sc-breadcrumb">
+          Showcases
+          <span className="sc-breadcrumb-sep">/</span>
+          <span>{selectedLabel}</span>
+        </div>
+        <div className="sc-topbar-actions">
+          <button
+            className={`sc-tab-btn ${view === "preview" ? "active" : ""}`}
+            onClick={() => setView("preview")}
+            title="Preview only"
+          >
+            <IconEye /> Preview
+          </button>
+          <button
+            className={`sc-tab-btn ${view === "split" ? "active" : ""}`}
+            onClick={() => setView("split")}
+            title="Split view"
+          >
+            <IconSplit /> Split
+          </button>
+          <button
+            className={`sc-tab-btn ${view === "code" ? "active" : ""}`}
+            onClick={() => setView("code")}
+            title="Code only"
+          >
+            <IconCode /> Code
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className={`sc-body ${view}`}>
+
+        {showPreview && (
+          <div className="sc-preview-pane">
+            <span className="sc-preview-label">Live preview</span>
+            <div className="sc-preview-inner" key={showcaseId + "-preview"}>
+              <FeatureOutlet id={showcaseId!} />
+            </div>
+          </div>
+        )}
+
+        {showCode && source && (
+          <div className="sc-code-pane">
+            <div className="sc-code-toolbar">
+              <div className="sc-code-toolbar-dots">
+                <div className="sc-code-dot sc-code-dot-r" />
+                <div className="sc-code-dot sc-code-dot-y" />
+                <div className="sc-code-dot sc-code-dot-g" />
+              </div>
+              <span className="sc-code-filename">
+                {selectedShowcase?.sourceFile?.split("/").pop() ?? "source.tsx"}
+              </span>
+              <span className="sc-code-lang">TSX</span>
+            </div>
+            <div className="sc-code-scroll" key={showcaseId + "-code"}>
+              <pre className="sc-code">{source}</pre>
+            </div>
+          </div>
+        )}
+
+        {showCode && !source && (
+          <div className="sc-empty" style={{ flex: 1 }}>
+            <div className="sc-empty-icon"><IconCode /></div>
+            <span>No source available</span>
+          </div>
+        )}
+
+      </div>
+    </>
+  );
+};
+
+@Feature({
+  id: "showcase-detail",
+  label: "Showcase Detail",
+  path: ":showcaseId",
+  parent: "showcases",
+  visibility: ["public"],
+})
+export class ShowcaseDetail extends React.Component {
+  render() { return <ShowcaseDetailContent />; }
+}
