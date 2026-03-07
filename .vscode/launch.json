@@ -1,0 +1,11 @@
+{
+  "type": "node",
+  "request": "launch",
+  "name": "Debug",
+  "sourceMap": true,
+  "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+  "resolveSourceMapLocations": [
+    "${workspaceFolder}/**",
+    "!**/node_modules/**"
+  ]
+}
