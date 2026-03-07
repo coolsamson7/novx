@@ -7,7 +7,8 @@
     "docs": "typedoc --options typedoc.json",
     "build": "nx run-many --target=build --all",
     "lint": "nx run-many --target=lint --all",
-    "test": "nx run-many --target=test --all"
+    "test": "nx run-many --target=test --all",
+    "deploy": "pnpm build:site && gh-pages -d dist/apps/app"
   },
   "devDependencies": {
     "@nrwl/eslint-plugin-nx": "^19.8.4",
@@ -33,6 +34,7 @@
     "@vitest/ui": "^4.0.18",
     "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.0.0",
+    "gh-pages": "^6.3.0",
     "glob": "^13.0.6",
     "html-webpack-plugin": "^5.6.6",
     "jsonc-eslint-parser": "^2.1.0",

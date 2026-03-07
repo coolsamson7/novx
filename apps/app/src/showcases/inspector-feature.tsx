@@ -4,7 +4,8 @@
 // Utilities
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { EnvironmentContext, Feature, FeatureMetadata } from "@novx/portal";
+import { Environment } from "@novx/core";
+import { EnvironmentContext, Feature, FeatureMetadata, FeatureRegistry } from "@novx/portal";
 import React from "react";
 import { useMemo, useState } from "react";
 
@@ -149,6 +150,7 @@ interface FeatureRegistryVisualizerProps {
 export default function FeatureRegistryVisualizer({
   features = [],
 }: FeatureRegistryVisualizerProps) {
+
   const [selected, setSelected] = useState<FeatureMetadata | null>(null);
   const [query, setQuery] = useState<string>("");
 
@@ -202,8 +204,12 @@ const styles = {
   features: [],
   visibility: ["private", "public"]
 })
-export class HomePage extends React.Component {
+export class InspectorPage extends React.Component {
+  static contextType = EnvironmentContext
+
+  declare context: Environment
   render() {
-      return <FeatureRegistryVisualizer/>
+      const features = this.context.get(FeatureRegistry).finder().withoutParent().find()
+      return <FeatureRegistryVisualizer features={features}/>
   }
 }

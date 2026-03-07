@@ -57,7 +57,7 @@
         {
           "id": "inspector",
           "label": "",
-          "path": "/inspector",
+          "path": "inspector",
           "component": "HomePage",
           "sourceFile": "apps/app/src/showcases/inspector-feature.tsx",
           "parent": "showcases",
