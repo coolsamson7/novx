@@ -34,11 +34,11 @@ jobs:
       - name: Build Nx App
         run: pnpm nx build app
 
-      - name: Copy App
-        run: cp -R apps/app/dist/* dist/docs/sample
-
       - name: Generate docs
         run: pnpm run docs
+
+      - name: Copy App
+        run: cp -R apps/app/dist/* dist/docs/sample
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
