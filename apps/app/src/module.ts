@@ -209,7 +209,7 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createTranslator(localeManager: LocaleManager) : Translator {
-    const base = const base = __webpack_public_path__ || '/';
+    const base = __webpack_public_path__ || '/';
 
     return new TranslatorBuilder()
       .loader(new AssetTranslationLoader({ path: `${base}i18n/` }))
