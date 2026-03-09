@@ -39,6 +39,9 @@ jobs:
       - name: Debug built index.html        # ← add this temporarily
         run: cat dist/apps/app/index.html
 
+      - name: Debug i18n     # ← add this temporarily
+        run: ls -la dist/apps/app/i18n
+
       - name: Generate docs
         run: pnpm run docs
 
