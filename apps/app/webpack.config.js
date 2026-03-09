@@ -15,13 +15,12 @@ module.exports = {
   devtool: "source-map",
 
   output: {
-    path: path.resolve(__dirname, "dist"),
-    publicPath: "/",
+    path: path.resolve(__dirname, "dist/apps/app"),  // fixed: matches project.json outputPath
+    publicPath: process.env.PUBLIC_URL || "/",        // fixed: driven by env var, fallback for local dev
     clean: true,
     filename: "[name].[contenthash].js",
   },
 
-  
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
     alias: {
@@ -42,23 +41,24 @@ module.exports = {
             type: "asset/source",
           },
 
-        // ✅ TS/TSX in showcases → raw text
-{
-  test: /\.(tsx?|ts|txt|css|json)$/, // add any other extensions you want as raw
-  resourceQuery: /raw/,               // only imports with '?raw'
-  type: 'asset/source',               // returns raw string
-},
+          // ✅ TS/TSX in showcases → raw text
+          {
+            test: /\.(tsx?|ts|txt|css|json)$/,
+            resourceQuery: /raw/,
+            type: "asset/source",
+          },
+
           // ✅ TS / TSX
           {
             test: /\.tsx?$/,
             loader: "ts-loader",
             options: {
-                transpileOnly: false,
-                compilerOptions: {
-                    sourceMap: true,
-                    inlineSourceMap: false
-                }
-             },
+              transpileOnly: false,
+              compilerOptions: {
+                sourceMap: true,
+                inlineSourceMap: false,
+              },
+            },
             exclude: /node_modules/,
           },
         ],
@@ -76,8 +76,7 @@ module.exports = {
       filename: "remoteEntry.js",
 
       remotes: {
-        microfrontend:
-          "microfrontend@http://localhost:3001/remoteEntry.js",
+        microfrontend: "microfrontend@http://localhost:3001/remoteEntry.js",
       },
 
       shared: {
