@@ -36,6 +36,9 @@ jobs:
         env:
           PUBLIC_URL: /sample/
 
+      - name: Debug built index.html        # ← add this temporarily
+        run: cat dist/apps/app/index.html
+
       - name: Generate docs
         run: pnpm run docs
 
