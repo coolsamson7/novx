@@ -34,7 +34,7 @@ jobs:
       - name: Build Nx App
         run: pnpm nx build app --configuration=production  # was: --prod --public-url=./
         env:
-          PUBLIC_URL: /sample/
+          PUBLIC_URL: /novx/sample/
 
       - name: Debug built index.html        # ← add this temporarily
         run: cat dist/apps/app/index.html
