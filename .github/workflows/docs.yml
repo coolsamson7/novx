@@ -32,7 +32,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Nx App
-        run: pnpm nx build app --prod --public-url=./
+        run: pnpm nx build app --configuration=production  # was: --prod --public-url=./
+        env:
+          PUBLIC_URL: /sample/
 
       - name: Generate docs
         run: pnpm run docs
@@ -40,7 +42,7 @@ jobs:
       - name: Copy App
         run: |
           mkdir -p dist/docs/sample
-          cp -R apps/app/dist/* dist/docs/sample/
+          cp -R dist/apps/app/* dist/docs/sample/  # was: apps/app/dist/*
           echo "✅ Nx app copied into docs/sample"
 
       - name: Upload artifact
