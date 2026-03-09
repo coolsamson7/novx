@@ -15,7 +15,7 @@ module.exports = {
   devtool: "source-map",
 
   output: {
-    path: path.resolve(__dirname, "dist/apps/app"),  // fixed: matches project.json outputPath
+    path: path.resolve(__dirname, "../../dist/apps/app"),
     publicPath: process.env.PUBLIC_URL || "/",        // fixed: driven by env var, fallback for local dev
     clean: true,
     filename: "[name].[contenthash].js",
