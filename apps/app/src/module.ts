@@ -207,8 +207,10 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createTranslator(localeManager: LocaleManager) : Translator {
+    const base = process.env.PUBLIC_URL || '/';
+
     return new TranslatorBuilder()
-      .loader(new AssetTranslationLoader({ path: '/i18n/' }))
+      .loader(new AssetTranslationLoader({ path: `${base}i18n/` }))
       .localeManager(localeManager)
       .build()
   }
