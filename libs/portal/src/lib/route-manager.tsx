@@ -11,6 +11,7 @@ import { SessionManager } from './session/session-manager';
 import { useInject } from "./environment";
 import { ErrorPage } from "./component/error-page";
 
+const base = document.querySelector('base')?.getAttribute('href') || "/"
 // guard for private routes
 
 const PrivateRoute: React.FC<{ feature: FeatureMetadata; loginPath?: string; children: React.ReactNode }> = ({ feature, loginPath, children }) => {
@@ -41,7 +42,7 @@ const PrivateRoute: React.FC<{ feature: FeatureMetadata; loginPath?: string; chi
 
       // If there is no internal login page, fall back to OIDC
       if (!loginPath) {
-        sessionManager.openSession().catch((err: any) => {
+        sessionManager.openSession({}).catch((err: any) => {
           setError(err.message || 'Login failed');
         });
       }
@@ -257,7 +258,7 @@ export class RouterManager {
 
   public renderRouter() {
     return (
-      <BrowserRouter>
+      <BrowserRouter basename={base}>
         <RouteChangeListener>
           <RoutesWrapper manager={this} />
         </RouteChangeListener>
