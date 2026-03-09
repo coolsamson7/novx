@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { ModuleFederationPlugin } = require("webpack").container;
+const CopyWebpackPlugin = require("copy-webpack-plugin");  // ← added
 const path = require("path");
 
 const foundationShared = {
@@ -16,7 +17,7 @@ module.exports = {
 
   output: {
     path: path.resolve(__dirname, "../../dist/apps/app"),
-    publicPath: process.env.PUBLIC_URL || "/",        // fixed: driven by env var, fallback for local dev
+    publicPath: process.env.PUBLIC_URL || "/",
     clean: true,
     filename: "[name].[contenthash].js",
   },
@@ -35,20 +36,15 @@ module.exports = {
     rules: [
       {
         oneOf: [
-          // ✅ SVGs → raw source (for sprite system)
           {
             test: /\.svg$/,
             type: "asset/source",
           },
-
-          // ✅ TS/TSX in showcases → raw text
           {
             test: /\.(tsx?|ts|txt|css|json)$/,
             resourceQuery: /raw/,
             type: "asset/source",
           },
-
-          // ✅ TS / TSX
           {
             test: /\.tsx?$/,
             loader: "ts-loader",
@@ -92,6 +88,17 @@ module.exports = {
 
     new HtmlWebpackPlugin({
       template: "apps/app/index.html",
+    }),
+
+    // ← added: copies public/ to output so i18n JSON etc. are present in production
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, "public"),
+          to: path.resolve(__dirname, "../../dist/apps/app"),
+          noErrorOnMissing: true,  // won't fail if public/ doesn't exist
+        },
+      ],
     }),
   ],
 
