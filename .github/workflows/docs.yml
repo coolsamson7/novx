@@ -37,7 +37,7 @@ jobs:
           PUBLIC_URL: /sample/
 
       - name: Debug built index.html        # ← add this temporarily
-        run: cat dist/apps/app/index.html
+        run: cat apps/app/dist/index.html
 
       - name: Generate docs
         run: pnpm run docs
@@ -45,7 +45,7 @@ jobs:
       - name: Copy App
         run: |
           mkdir -p dist/docs/sample
-          cp -R dist/apps/app/* dist/docs/sample/  # was: apps/app/dist/*
+          cp -R apps/app/dist/* dist/docs/sample/  # was: apps/app/dist/*    dist/apps/app/*
           echo "✅ Nx app copied into docs/sample"
 
       - name: Upload artifact
