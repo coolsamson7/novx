@@ -1,28 +1,42 @@
 
-export interface AuthenticationRequest {
-  user?: string;
-  password?: string;
 
-  [prop: string]: any;
-}
 
-export interface Ticket {
-  [prop: string]: any;
-}
-
-export interface Session<U = any, T extends Ticket = Ticket> {
+/**
+ * A `Session` captures the data of a logged in user and cooresponding technical information
+ * in the form of a ticket ( e.g. tokens, expire date, ... )
+ * @params U the user type
+ * @params T the ticket type
+ */
+export interface Session<U = any, T = any> {
   user: U;
   ticket: T;
   expiry?: number;
   locale?: string;
 
-  [prop: string]: any;
+  sessionLocals: Record<string,any>
 }
 
-export interface Authentication<U = any, T extends Ticket = Ticket> {
- authenticate(request: AuthenticationRequest): Promise<Session<U, T>>;
+/**
+ *  `Authentication` is repsonsible to establish and delete a user session.
+ * @param R any information requires to trigger the login
+ * @params U the user type
+ * @params T the ticket type
+ */
+export interface Authentication<R = any, U = any, T = any> {
+  /**
+   * setup the authentication and possibly restore a valid session.
+   */
+  start(): Promise<Session<U, T> | null>;
 
- init(): Promise<Session<U, T> | null>;
+  /**
+   * request a session
+   * @param request any request information.
+   * @returns a valid session
+   */
+  login(request: R): Promise<Session<U, T>>;
 
- logout(): Promise<void>;
+  /**
+   * logout
+   */
+  logout(): Promise<void>;
 }

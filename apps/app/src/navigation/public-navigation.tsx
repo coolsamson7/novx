@@ -96,7 +96,7 @@ export class PublicNavigationFeature extends React.Component<
 
       // fallback (OIDC case without login feature)
       
-      await sessionManager.openSession();
+      await sessionManager.openSession({});
     }
 
     this.updateSessionState();

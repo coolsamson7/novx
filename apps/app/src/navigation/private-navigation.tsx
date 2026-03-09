@@ -80,7 +80,7 @@ export class Navigation extends React.Component<
     if (this.state.hasSession) {
       await sessionManager.closeSession();
     } else {
-      await sessionManager.openSession();
+      await sessionManager.openSession({});
     }
     this.updateSessionState();
   };

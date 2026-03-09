@@ -1,5 +1,5 @@
 import Keycloak, { KeycloakInstance } from "keycloak-js";
-import { Authentication, Session, Ticket } from "./authentication";
+import { Authentication, Session } from "./authentication";
 import { SessionManager } from "./session-manager";
 
 export interface OIDCUser {
@@ -12,13 +12,13 @@ export interface OIDCUser {
   [prop: string]: any;
 }
 
-export interface OIDCTicket extends Ticket {
+export interface OIDCTicket {
   accessToken: string;
   refreshToken?: string;
   idToken?: string;
 }
 
-export class OIDCAuthentication implements Authentication<OIDCUser, OIDCTicket> {
+export class OIDCAuthentication implements Authentication<any, OIDCUser, OIDCTicket> {
   // instance data
 
   private keycloak: KeycloakInstance;
@@ -35,7 +35,7 @@ export class OIDCAuthentication implements Authentication<OIDCUser, OIDCTicket> 
 
   // implement
 
-  async init(): Promise<Session<OIDCUser, OIDCTicket> | null> {
+  async start(): Promise<Session<OIDCUser, OIDCTicket> | null> {
      await this.keycloak.init({
       onLoad: 'check-sso',
       flow: 'standard',
@@ -49,7 +49,7 @@ export class OIDCAuthentication implements Authentication<OIDCUser, OIDCTicket> 
     return this.buildSession();
   }
 
-  async authenticate(): Promise<Session<OIDCUser, OIDCTicket>> {
+  async login(): Promise<Session<OIDCUser, OIDCTicket>> {
     // Redirect to login
     await this.keycloak.login({
       redirectUri: window.location.href,
@@ -78,6 +78,7 @@ export class OIDCAuthentication implements Authentication<OIDCUser, OIDCTicket> 
       expiry: this.keycloak.tokenParsed?.exp
         ? this.keycloak.tokenParsed.exp * 1000
         : undefined,
+        sessionLocals: {}
     };
   }
 }

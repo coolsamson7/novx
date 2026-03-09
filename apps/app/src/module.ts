@@ -19,7 +19,6 @@ import {
   SvgSpriteRegistry,
   OIDCUser,
   Session,
-  AuthenticationRequest,
   Controller,
   command,
   OIDCAuthentication,
@@ -81,17 +80,21 @@ export class FooterTrace extends Trace {
   }
 }
 
+export interface LoginRequest {
+  user?: string,
+  password?: string
+}
 
 /**
  * No-op authentication service that returns a dummy user.
  */
-export class DummyAuthentication implements Authentication<OIDCUser, any> {
-   async authenticate(request: AuthenticationRequest): Promise<Session<OIDCUser, any>> {
+export class DummyAuthentication implements Authentication<LoginRequest, OIDCUser, any> {
+   async login(request: LoginRequest): Promise<Session<OIDCUser, any>> {
     return {
       user: {
-        id: request.username,
-        username: request.username,
-        email: request.username + '@example.com',
+        id: request.user,
+        username: request.user,
+        email: request.user + '@example.com',
         roles: ['user'],
         given_name: '',
         family_name: '',
@@ -100,11 +103,12 @@ export class DummyAuthentication implements Authentication<OIDCUser, any> {
         preferred_username: '',
         sub: ''
       },
-      ticket: {}
+      ticket: {},
+      sessionLocals: {}
     }
    }
   
-   async init(): Promise<Session<OIDCUser, any> | null> {
+   async start(): Promise<Session<OIDCUser, any> | null> {
     return null;
    }
     

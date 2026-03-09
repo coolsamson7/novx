@@ -376,7 +376,7 @@ const LoginView: React.FC = () => {
     setLoading(true);
 
     try {
-      await sessionManager.openSession({ username, password });
+      await sessionManager.openSession({ user: username, password });
       const intended = sessionStorage.getItem("intendedRoute") || "/";
       sessionStorage.removeItem("intendedRoute");
       navigate(intended, { replace: true });
