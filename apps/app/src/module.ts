@@ -57,6 +57,8 @@ import {
 
 import manifest from './manifest.json';
 
+declare const __webpack_public_path__: string;
+
 // funny trace
 
 export class FooterTrace extends Trace {
@@ -207,9 +209,7 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createTranslator(localeManager: LocaleManager) : Translator {
-      console.log("### TR'");
-    console.log(process.env.PUBLIC_URL)
-    const base = process.env.PUBLIC_URL || '/';
+    const base = const base = __webpack_public_path__ || '/';
 
     return new TranslatorBuilder()
       .loader(new AssetTranslationLoader({ path: `${base}i18n/` }))
