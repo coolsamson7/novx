@@ -207,6 +207,7 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createTranslator(localeManager: LocaleManager) : Translator {
+      console.log("### TR'");
     console.log(process.env.PUBLIC_URL)
     const base = process.env.PUBLIC_URL || '/';
 
