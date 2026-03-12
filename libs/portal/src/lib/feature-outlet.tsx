@@ -1,9 +1,16 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 
 import { FeatureMetadata, FeatureRegistry } from './feature-registry';
 
-import { ErrorManager, ErrorContext, Tracer, TraceLevel, Environment } from '@novx/core';
+import {
+  ErrorManager,
+  ErrorContext,
+  Tracer,
+  TraceLevel,
+  Environment
+} from '@novx/core';
+
 import { FeatureDescriptor } from './model';
 import { EnvironmentContext } from './environment';
 import { ErrorDisplay } from './component/error-display';
@@ -15,36 +22,29 @@ export type OutletLoaderType<T extends OutletLoader = OutletLoader> =
   new (...args: any[]) => T;
 
 export abstract class OutletLoader {
-  // static data
 
-  static loaders : OutletLoaderType[] = []
-
-  // instance data
+  static loaders: OutletLoaderType[] = [];
 
   id: string;
   loading = false;
 
-  // constructor
-
   constructor(id: string) {
-      this.id = id;
+    this.id = id;
   }
 
   isLoading() {
-      return this.loading;
+    return this.loading;
   }
 
   protected async exec(fn: () => Promise<void>) {
-      this.loading = true;
-      try {
-        await fn();
-      }
-      finally {
-        this.loading = false;
-      }
-  }
+    this.loading = true;
 
-  // abstract
+    try {
+      await fn();
+    } finally {
+      this.loading = false;
+    }
+  }
 
   abstract shouldRun(feature: FeatureMetadata, action: LoaderAction): boolean;
 
@@ -52,64 +52,44 @@ export abstract class OutletLoader {
 }
 
 /**
- * Renders a named feature.
- *
- * The component resolves the feature implementation dynamically
- * using the provided `featureId`.
- *
- * @example
- * ```tsx
- * <FeatureOutlet featureId="user-profile" />
- * ```
+ * Feature outlet options
  */
-
 export interface FeatureOutletOptions {
-  /**
-   * the feature id
-   */
- id: string
+  id: string;
 }
 
-export class FeatureOutlet extends React.Component<FeatureOutletOptions> {
-  state: {
-    feature?: FeatureMetadata;
-    Loaded?: React.ComponentClass<any>;
-    loadingLoaders: OutletLoader[];
-    error?: Error;
-  } = {
-    loadingLoaders: [],
+interface FeatureOutletState {
+  feature?: FeatureMetadata;
+  Loaded?: React.ComponentClass<any>;
+  loading: boolean;
+  error?: Error;
+}
+
+export class FeatureOutlet extends React.Component<
+  FeatureOutletOptions,
+  FeatureOutletState
+> {
+  static contextType = EnvironmentContext;
+
+  declare context: Environment;
+
+  environment?: Environment;
+
+  component: any;
+
+  state: FeatureOutletState = {
+    loading: true
   };
 
-  static contextType = EnvironmentContext
-
-  declare context: Environment
-
-  environment?: Environment; // optional child environment for remote modules
-
-  allLoaders(environment: Environment): OutletLoader[] {
-    return OutletLoader.loaders.map(loaderType => environment.get(loaderType))
-  }
-
-  component: any; // resolved component
-
-
   private async runLoaders(feature: FeatureMetadata) {
-    const active = OutletLoader.loaders
-       .map(loaderType => this.context.get(loaderType))
-       .filter(loader => loader.shouldRun(feature, 'component'));
+    const loaders = OutletLoader.loaders
+      .map(t => this.context.get(t))
+      .filter(loader => loader.shouldRun(feature, 'component'));
 
-    this.setState({ loadingLoaders: active });
+    if (!loaders.length) return;
 
-    await Promise.all(active.map(loader => loader.run(feature, this)));
-
-    this.setState({ loadingLoaders: [] });
+    await Promise.all(loaders.map(loader => loader.run(feature, this)));
   }
-
-  private isLoading() {
-    return this.state.loadingLoaders.some(l => l.isLoading());
-  }
-
-  // lifecycle
 
   async componentDidMount() {
     const featureRegistry = this.context.get(FeatureRegistry);
@@ -127,51 +107,93 @@ export class FeatureOutlet extends React.Component<FeatureOutletOptions> {
       this.setState({
         feature,
         Loaded: this.component?.default ?? this.component,
+        loading: false
       });
+
     } catch (err) {
+
       Tracer.Trace(
         'portal.feature-outlet',
         TraceLevel.HIGH,
         `Failed to load feature '${feature.id}': ${(err as Error).message}`
       );
-      this.setState({ feature, error: err as Error });
+
+      this.setState({
+        feature,
+        error: err as Error,
+        loading: false
+      });
     }
   }
 
-  // override
-
   render() {
-    const { feature, Loaded, error } = this.state;
+    const { feature, Loaded, error, loading } = this.state;
 
     const env = this.environment ?? this.context;
 
     return (
       <div style={{ position: 'relative', height: '100%' }}>
-        <HorizontalSpinner active={this.isLoading()} />
+
+        <DelayedSpinner active={loading} />
 
         <FeatureErrorBoundary feature={feature} error={error}>
+
           {Loaded && (
-            <Suspense fallback={<HorizontalSpinner />}>
-              <EnvironmentContext.Provider value={env}>
-                   <LoadedWrapper Component={Loaded} feature={feature} />
-              </EnvironmentContext.Provider>
-            </Suspense>
+            <EnvironmentContext.Provider value={env}>
+              <LoadedWrapper Component={Loaded} feature={feature} />
+            </EnvironmentContext.Provider>
           )}
+
         </FeatureErrorBoundary>
+
       </div>
     );
   }
 }
 
-// Helpers        
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
 
-const LoadedWrapper: React.FC<{Component: React.ComponentClass<any>; feature?: FeatureDescriptor}> = ({ Component, feature }) => {
+const LoadedWrapper: React.FC<{
+  Component: React.ComponentClass<any>;
+  feature?: FeatureDescriptor;
+}> = ({ Component, feature }) => {
   const params = useParams();
 
   return <Component {...params} feature={feature} />;
 };
 
-// Error boundary                                                    
+/* -------------------------------------------------------------------------- */
+/* Delayed Spinner                                                            */
+/* -------------------------------------------------------------------------- */
+
+const DelayedSpinner: React.FC<{ active: boolean }> = ({ active }) => {
+  const visible = useDelayedFlag(active, 300);
+
+  return <HorizontalSpinner active={visible} />;
+};
+
+function useDelayedFlag(active: boolean, delay = 300) {
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!active) {
+      setVisible(false);
+      return;
+    }
+
+    const timer = setTimeout(() => setVisible(true), delay);
+
+    return () => clearTimeout(timer);
+  }, [active, delay]);
+
+  return visible;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Error Boundary                                                             */
+/* -------------------------------------------------------------------------- */
 
 interface FeatureErrorBoundaryProps {
   feature?: FeatureDescriptor;
@@ -189,22 +211,27 @@ class FeatureErrorBoundary extends React.Component<
   FeatureErrorBoundaryProps,
   FeatureErrorBoundaryState
 > {
+
+  static contextType = EnvironmentContext;
+
+  declare context: Environment;
+
   state: FeatureErrorBoundaryState = {
-    hasError: false,
-    error: undefined,
-    errorInfo: undefined,
+    hasError: false
   };
 
-    static contextType = EnvironmentContext
-
-  declare context: Environment
-
-  static getDerivedStateFromError(error: Error): Partial<FeatureErrorBoundaryState> {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error) {
+    return {
+      hasError: true,
+      error
+    };
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    this.setState({ errorInfo: info });
+
+    this.setState({
+      errorInfo: info
+    });
 
     const errorManager = this.context.get(ErrorManager);
 
@@ -213,13 +240,14 @@ class FeatureErrorBoundary extends React.Component<
       featureId: this.props.feature?.id,
       featureLabel: this.props.feature?.label,
       featureComponent: this.props.feature?.component,
-      componentStack: info.componentStack,
+      componentStack: info.componentStack
     };
 
     errorManager.handle(error, ctx);
   }
 
   render() {
+
     const displayError = this.state.error || this.props.error;
     const shouldShowError = this.state.hasError || this.props.error;
 
@@ -233,6 +261,6 @@ class FeatureErrorBoundary extends React.Component<
       );
     }
 
-    return this.props.children ?? <HorizontalSpinner />;
+    return this.props.children ?? null;
   }
 }
