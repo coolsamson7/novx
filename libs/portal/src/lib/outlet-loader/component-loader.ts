@@ -19,7 +19,7 @@ export class LocalComponentLoader extends OutletLoader {
   }
 
   async run(feature: FeatureMetadata, outlet: FeatureOutlet): Promise<void> {
-    await this.exec(async () => {
+    return this.exec(async () => {
       Tracer.Trace(
         'portal.feature-outlet',
         TraceLevel.HIGH,

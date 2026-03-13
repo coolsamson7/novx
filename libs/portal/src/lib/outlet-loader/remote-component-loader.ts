@@ -91,8 +91,8 @@ export class RemoteComponentLoader extends OutletLoader {
     );
   }
 
-  async run(feature: FeatureMetadata, outlet: FeatureOutlet) {
-    await this.exec(async () => {
+  async run(feature: FeatureMetadata, outlet: FeatureOutlet): Promise<void> {
+    return this.exec(async () => {
       Tracer.Trace(
         'portal.feature-outlet',
         TraceLevel.HIGH,

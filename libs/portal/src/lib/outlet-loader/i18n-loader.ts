@@ -19,8 +19,8 @@ export class I18NLoader extends OutletLoader {
     return action === 'component' && feature.preloadI18n !== undefined && feature.preloadI18n.length > 0;
   }
 
-  async run(feature: FeatureMetadata) {
-    await this.exec(async () => {
+  async run(feature: FeatureMetadata) : Promise<void> {
+    return this.exec(async () => {
       Tracer.Trace(
         'portal.feature-outlet',
         TraceLevel.HIGH,
