@@ -59,7 +59,6 @@ export interface FeatureOutletOptions {
 }
 
 interface FeatureOutletState {
-  feature?: FeatureMetadata;
   Loaded?: React.ComponentClass<any>;
   loading: boolean;
   error?: Error;
@@ -70,11 +69,9 @@ export class FeatureOutlet extends React.Component<
   FeatureOutletState
 > {
   static contextType = EnvironmentContext;
-
   declare context: Environment;
 
   environment?: Environment;
-
   component: any;
 
   state: FeatureOutletState = {
@@ -87,7 +84,6 @@ export class FeatureOutlet extends React.Component<
       .filter(loader => loader.shouldRun(feature, 'component'));
 
     if (!loaders.length) return;
-
     await Promise.all(loaders.map(loader => loader.run(feature, this)));
   }
 
@@ -98,28 +94,12 @@ export class FeatureOutlet extends React.Component<
     try {
       await this.runLoaders(feature);
 
-      Tracer.Trace(
-        'portal.feature-outlet',
-        TraceLevel.HIGH,
-        `Loaded feature component '${feature.component}' for feature '${feature.id}'`
-      );
-
       this.setState({
-        feature,
         Loaded: this.component?.default ?? this.component,
         loading: false
       });
-
     } catch (err) {
-
-      Tracer.Trace(
-        'portal.feature-outlet',
-        TraceLevel.HIGH,
-        `Failed to load feature '${feature.id}': ${(err as Error).message}`
-      );
-
       this.setState({
-        feature,
         error: err as Error,
         loading: false
       });
@@ -127,25 +107,26 @@ export class FeatureOutlet extends React.Component<
   }
 
   render() {
-    const { feature, Loaded, error, loading } = this.state;
+    const { Loaded, error, loading } = this.state;
+
+    // FIX: derive synchronously — no intermediate undefined render
+    const featureRegistry = this.context.get(FeatureRegistry);
+    const feature = featureRegistry.get(this.props.id);
+
+    console.log(this.props.id)
 
     const env = this.environment ?? this.context;
 
     return (
       <div style={{ position: 'relative', height: '100%' }}>
-
         <DelayedSpinner active={loading} />
-
         <FeatureErrorBoundary feature={feature} error={error}>
-
           {Loaded && (
             <EnvironmentContext.Provider value={env}>
               <LoadedWrapper Component={Loaded} feature={feature} />
             </EnvironmentContext.Provider>
           )}
-
         </FeatureErrorBoundary>
-
       </div>
     );
   }
