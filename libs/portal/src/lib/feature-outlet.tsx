@@ -47,11 +47,17 @@ export abstract class OutletLoader {
   abstract run(feature: FeatureMetadata, outlet: FeatureOutlet): Promise<void>;
 }
 
-// ─── debug ───────────────────────────────────────────────────────────────────
+// ─── cache entry ─────────────────────────────────────────────────────────────
+//
+// Stores both the component class AND the remote module's DI environment.
+// For local features `environment` is undefined and the parent context is used.
+// For federated features `environment` is the remote module's Environment so
+// its own injectable services resolve correctly after a cache hit.
 
-let renderCounters: Record<string, number> = {};
-let prevPropsMap:   Record<string, any>    = {};
-let prevStateMap:   Record<string, any>    = {};
+interface CachedFeature {
+  component:    any;
+  environment?: Environment;
+}
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
@@ -65,6 +71,12 @@ interface FeatureOutletState {
   error?: Error;
 }
 
+// ─── debug helpers ────────────────────────────────────────────────────────────
+
+const _renderCounters: Record<string, number> = {};
+const _prevProps:      Record<string, any>    = {};
+const _prevState:      Record<string, any>    = {};
+
 // ─── FeatureOutlet ────────────────────────────────────────────────────────────
 
 export class FeatureOutlet extends React.Component<
@@ -74,14 +86,16 @@ export class FeatureOutlet extends React.Component<
   static contextType = EnvironmentContext;
   declare context: Environment;
 
+  // Written by OutletLoader implementations
   public environment?: Environment;
   public component: any;
 
-  // ── static component cache shared across all instances ──────────────────────
-  // Once a feature's component has been loaded it is stored here so subsequent
-  // mounts of the same feature start in the loaded state — no loading phase,
-  // no white flash.
-  private static componentCache = new Map<string, any>();
+  // ── static component cache ───────────────────────────────────────────────────
+  //
+  // Shared across all FeatureOutlet instances for the lifetime of the session.
+  // Keyed by feature id.  Populated after a successful load so a cache entry
+  // guarantees all loaders have already run successfully.
+  private static componentCache = new Map<string, CachedFeature>();
 
   static clearCache() {
     FeatureOutlet.componentCache.clear();
@@ -101,17 +115,27 @@ export class FeatureOutlet extends React.Component<
 
   // Initialise state synchronously from cache so the very first render is
   // already in the loaded state when the component was visited before.
+  // For federated features the remote Environment is also restored here so
+  // the correct DI context is available before the first render.
   state: FeatureOutletState = (() => {
     const cached = FeatureOutlet.componentCache.get(this.props.id);
     if (cached) {
-      console.log(`%c[FeatureOutlet] ${this.props.id} — cache HIT, no loading phase`, 'color:#22c55e');
+      console.log(
+        `%c[FeatureOutlet] ${this.props.id} — cache HIT (federated=${!!cached.environment})`,
+        'color:#22c55e'
+      );
+      // Restore the remote environment so render() picks it up immediately
+      this.environment = cached.environment;
       return {
         loading: false,
-        Loaded:  cached?.default ?? cached,
+        Loaded:  cached.component?.default ?? cached.component,
         error:   undefined,
       };
     }
-    console.log(`%c[FeatureOutlet] ${this.props.id} — cache MISS, will load`, 'color:#f59e0b');
+    console.log(
+      `%c[FeatureOutlet] ${this.props.id} — cache MISS, will load`,
+      'color:#f59e0b'
+    );
     return {
       loading: true,
       Loaded:  undefined,
@@ -133,7 +157,8 @@ export class FeatureOutlet extends React.Component<
   // ── lifecycle ─────────────────────────────────────────────────────────────────
 
   async componentDidMount() {
-    // Already loaded from cache — nothing to do, no setState needed.
+    // Cache hit — loaders already ran, environment already restored in state
+    // initialiser above. Nothing to do.
     if (!this.state.loading) return;
 
     const feature = this.getFeature();
@@ -141,9 +166,18 @@ export class FeatureOutlet extends React.Component<
     try {
       await this.runLoaders(feature);
 
-      // Store in cache so the next mount of this feature is instant.
-      FeatureOutlet.componentCache.set(this.props.id, this.component);
-      console.log(`%c[FeatureOutlet] ${this.props.id} — stored in cache`, 'color:#22c55e');
+      // Store component + environment (undefined for local, Environment for remote).
+      // The entry is only created after all loaders succeed so a cache hit always
+      // means the feature is fully ready.
+      FeatureOutlet.componentCache.set(this.props.id, {
+        component:   this.component,
+        environment: this.environment,
+      });
+
+      console.log(
+        `%c[FeatureOutlet] ${this.props.id} — stored in cache (federated=${!!this.environment})`,
+        'color:#22c55e'
+      );
 
       this.setState({
         Loaded:  this.component?.default ?? this.component,
@@ -162,17 +196,14 @@ export class FeatureOutlet extends React.Component<
   render() {
     // ── debug ─────────────────────────────────────────────────────────────────
     const id = this.props.id;
-    renderCounters[id] = (renderCounters[id] ?? 0) + 1;
-    const count = renderCounters[id];
-
-    const prevProps = prevPropsMap[id] ?? {};
-    const prevState = prevStateMap[id] ?? {};
+    _renderCounters[id] = (_renderCounters[id] ?? 0) + 1;
+    const count = _renderCounters[id];
 
     const changedProps = Object.keys(this.props).filter(
-      k => (this.props as any)[k] !== prevProps[k]
+      k => (this.props as any)[k] !== (_prevProps[id] ?? {})[k]
     );
     const changedState = Object.keys(this.state).filter(
-      k => (this.state as any)[k] !== prevState[k]
+      k => (this.state as any)[k] !== (_prevState[id] ?? {})[k]
     );
 
     console.group(`[FeatureOutlet] ${id} render #${count}`);
@@ -180,15 +211,22 @@ export class FeatureOutlet extends React.Component<
     if (changedState.length)  console.log('changed state:', changedState);
     if (!changedProps.length && !changedState.length)
       console.warn('⚠️ no props/state changed — context change or StrictMode');
-    console.log(`loading=${this.state.loading}  cached=${FeatureOutlet.componentCache.has(id)}`);
+    console.log(
+      `loading=${this.state.loading}  ` +
+      `cached=${FeatureOutlet.componentCache.has(id)}  ` +
+      `federated=${!!this.environment}`
+    );
     console.groupEnd();
 
-    prevPropsMap[id] = { ...this.props };
-    prevStateMap[id] = { ...this.state };
+    _prevProps[id] = { ...this.props };
+    _prevState[id] = { ...this.state };
     // ── end debug ─────────────────────────────────────────────────────────────
 
     const { Loaded, error, loading } = this.state;
     const feature = this.getFeature();
+
+    // For federated features use the remote module's environment.
+    // For local features fall back to the parent context.
     const env = this.environment ?? this.context;
 
     return (
@@ -198,6 +236,7 @@ export class FeatureOutlet extends React.Component<
           Keep the subtree mounted with visibility:hidden while loading so
           React doesn't thrash children. Once loaded flip to visible —
           no layout shift, no white flash.
+          On cache hit loading is already false so this div is immediately visible.
         */}
         <div style={{ visibility: loading ? 'hidden' : 'visible', height: '100%' }}>
           <FeatureErrorBoundary feature={feature} error={error}>
@@ -254,8 +293,8 @@ interface FeatureErrorBoundaryProps {
 }
 
 interface FeatureErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
+  hasError:   boolean;
+  error?:     Error;
   errorInfo?: React.ErrorInfo;
 }
 
