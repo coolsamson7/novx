@@ -12,60 +12,56 @@ import { useInject } from "./environment";
 import { ErrorPage } from "./component/error-page";
 
 const base = document.querySelector('base')?.getAttribute('href') || "/"
-// guard for private routes
+
+// ─── debug helper ────────────────────────────────────────────────────────────
+
+const DBG = {
+  group: (label: string) => console.group(`%c[RouteManager] ${label}`, 'color:#6366f1;font-weight:bold'),
+  end:   () => console.groupEnd(),
+  log:   (...args: any[]) => console.log('%c[RouteManager]', 'color:#6366f1', ...args),
+  warn:  (...args: any[]) => console.warn('%c[RouteManager]', 'color:#f59e0b', ...args),
+}
+
+// ─── PrivateRoute ─────────────────────────────────────────────────────────────
 
 const PrivateRoute: React.FC<{ feature: FeatureMetadata; loginPath?: string; children: React.ReactNode }> = ({ feature, loginPath, children }) => {
   const [sessionManager] = useInject(SessionManager);
   const location = useLocation();
 
-  const [hasSession, setHasSession] = React.useState(
-    sessionManager.hasSession()
-  );
-
+  const [hasSession, setHasSession] = React.useState(sessionManager.hasSession());
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const sub = sessionManager.events$.subscribe(() => {
       setHasSession(sessionManager.hasSession());
     });
-
     return () => sub.unsubscribe();
   }, [sessionManager]);
 
   React.useEffect(() => {
+    if (hasSession) return;
+    if (location.pathname !== feature.path) return;
 
-    const isActive = location.pathname === feature.path;
+    sessionStorage.setItem('intendedRoute', location.pathname);
 
-    if (!hasSession && isActive) {
-
-      sessionStorage.setItem('intendedRoute', location.pathname);
-
-      // If there is no internal login page, fall back to OIDC
-      if (!loginPath) {
-        sessionManager.openSession({}).catch((err: any) => {
-          setError(err.message || 'Login failed');
-        });
-      }
+    if (!loginPath) {
+      sessionManager.openSession({}).catch((err: any) => {
+        setError(err.message || 'Login failed');
+      });
     }
-
-  }, [hasSession, feature.id, location.pathname]);
+  }, [hasSession, location.pathname]);
 
   if (!hasSession) {
-
-    // Internal login page available
-    if (loginPath) {
-      return <Navigate to={loginPath} replace />;
-    }
-
+    if (loginPath) return <Navigate to={loginPath} replace />;
     return <div>🔐 Verifying authentication...</div>;
   }
 
-  if (error) {
-    return <div>⚠️ {error}</div>;
-  }
+  if (error) return <div>⚠️ {error}</div>;
 
   return <>{children}</>;
 };
+
+// ─── types ───────────────────────────────────────────────────────────────────
 
 export type RouteObjectWithFeature = RouteObject & {
   $feature: FeatureMetadata;
@@ -73,6 +69,8 @@ export type RouteObjectWithFeature = RouteObject & {
 }
 
 export type FeatureChangeListener = (feature: FeatureMetadata) => void;
+
+// ─── RouteChangeNotifier ─────────────────────────────────────────────────────
 
 @injectable()
 export class RouteChangeNotifier {
@@ -85,14 +83,13 @@ export class RouteChangeNotifier {
 
   notify(location: any) {
     for (const listener of this.listeners) {
-      try {
-        listener(location);
-      } catch (err) {
-        console.error("Route listener failed", err);
-      }
+      try { listener(location); }
+      catch (err) { console.error("Route listener failed", err); }
     }
   }
 }
+
+// ─── RouteChangeListener ─────────────────────────────────────────────────────
 
 const RouteChangeListener: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -105,64 +102,66 @@ const RouteChangeListener: React.FC<{ children: React.ReactNode }> = ({ children
   return <>{children}</>;
 };
 
-/* ======================================================
- * RoutesWrapper — defined at module level so its type is
- * stable across renders (no remount on login/logout).
- * Holds the route tree in React state so updates are
- * atomic: rebuild + re-render happen in one batch.
- * ====================================================== */
+// ─── RoutesWrapper ───────────────────────────────────────────────────────────
+//
+// Defined at module level — stable type identity across renders.
 
 const RoutesWrapper: React.FC<{ manager: RouterManager }> = ({ manager }) => {
   const [sessionManager] = useInject(SessionManager);
+  const renderCount = React.useRef(0);
+  renderCount.current++;
 
-  // Initialise with the current root's route tree
+  DBG.log(`RoutesWrapper render #${renderCount.current}`);
+
   const [routes, setRoutes] = React.useState<RouteObjectWithFeature[]>(() => {
+    DBG.log('RoutesWrapper: initial state factory — building routes');
     manager.root = manager.computeRoot();
     return manager.buildRouteObjects(manager.root);
   });
 
   React.useEffect(() => {
-    sessionManager.events$.subscribe((event) => {
-      if ( event.type == "closed" || event.type == "opened" ) {
-          // Recompute root (may differ after login / logout)
-          manager.root = manager.computeRoot();
-          // Rebuild and push into state atomically
-          setRoutes(manager.buildRouteObjects(manager.root));
+    DBG.log('RoutesWrapper: subscribing to session events');
+
+    const sub = sessionManager.events$.subscribe((event) => {
+      DBG.log(`RoutesWrapper: session event "${event.type}"`);
+
+      if (event.type === "closed" || event.type === "opened") {
+        DBG.log('RoutesWrapper: rebuilding routes after session change');
+        manager.invalidateRouteCache();
+        manager.root = manager.computeRoot();
+        setRoutes(manager.buildRouteObjects(manager.root));
       }
     });
+
+    return () => {
+      DBG.log('RoutesWrapper: unsubscribing from session events');
+      sub.unsubscribe();
+    };
   }, [sessionManager]);
 
   return useRoutes(routes);
 };
 
-/**
- * A `RouteManager` is responsible to setup routes dynamically given a filled {@link FeatureRegistry}
- */
+// ─── RouterManager ───────────────────────────────────────────────────────────
+
 @injectable()
 export class RouterManager {
-  // instance data — made accessible to RoutesWrapper above
-
   routeObjects: RouteObjectWithFeature[] = [];
+
   private featureListeners = new Set<FeatureChangeListener>();
 
-  computeRoot: () => FeatureMetadata = () => ({
-    id: "",
-    component: ""
-  });
+  // Cache keyed by `featureId:hasSession`.
+  // Stable JSX element references prevent React from remounting FeatureOutlets
+  // on every navigation — only invalidated on session change.
+  private routeCache = new Map<string, RouteObjectWithFeature>();
 
-  root: FeatureMetadata = this.computeRoot()
+  computeRoot: () => FeatureMetadata = () => ({ id: "", component: "" });
+  root: FeatureMetadata = this.computeRoot();
 
-  // constructor
+  constructor(private featureRegistry: FeatureRegistry, private sessionManager: SessionManager) {}
 
-  constructor(private featureRegistry: FeatureRegistry, private sessionManager: SessionManager) {
-  }
+  // ── public ──────────────────────────────────────────────────────────────────
 
-  // public
-
-  /**
-   * set a function that computes the root of the route tree.
-   * @param root the function
-   */
   setRoot(root: () => FeatureMetadata) {
     this.computeRoot = root;
     this.root = root();
@@ -175,86 +174,147 @@ export class RouterManager {
 
   emitFeatureChange(feature: FeatureMetadata) {
     for (const listener of this.featureListeners) {
-      try {
-        listener(feature);
-      } catch (err) {
-        console.error('FeatureChangeListener failed', err);
-      }
+      try { listener(feature); }
+      catch (err) { console.error('FeatureChangeListener failed', err); }
     }
   }
 
-  // Public so RoutesWrapper can call it directly
+  public invalidateRouteCache() {
+    DBG.log(`invalidateRouteCache — clearing ${this.routeCache.size} entries`);
+    this.routeCache.clear();
+  }
+
+  // ── private: route building ──────────────────────────────────────────────────
+
+  private buildOrReuse(
+    feature: FeatureMetadata,
+    hasSession: boolean,
+    loginPath?: string
+  ): RouteObjectWithFeature {
+    const cacheKey = `${feature.id}:${hasSession}`;
+    const cached = this.routeCache.get(cacheKey);
+
+    if (cached) {
+      DBG.log(`  ✓ reuse  [${cacheKey}]  element identity: ${(cached.element as any)?._owner ?? 'n/a'}`);
+      return cached;
+    }
+
+    DBG.warn(`  ✗ create [${cacheKey}]  — new JSX element will be created`);
+
+    const isPrivate =
+      feature.visibility &&
+      feature.visibility.includes('private') &&
+      !feature.visibility.includes('public');
+
+    const element = (isPrivate && !hasSession) ? (
+      <PrivateRoute feature={feature} loginPath={loginPath}>
+        <FeatureOutlet id={feature.id} />
+      </PrivateRoute>
+    ) : (
+      <FeatureOutlet id={feature.id} />
+    );
+
+    const routePath = (feature.path || '').replace(/^\//, '');
+
+    const route: RouteObjectWithFeature = {
+      path: routePath,
+      element,
+      $feature: feature,
+      children: (feature.children || []).map(c => {
+        DBG.log(`    building child: ${c.id} (parent=${c.parent})`);
+        return this.buildOrReuse(c, hasSession, loginPath);
+      }),
+    };
+
+    this.routeCache.set(cacheKey, route);
+    return route;
+  }
+
   public buildRouteObjects(root: FeatureMetadata): RouteObjectWithFeature[] {
-    if (Tracer.ENABLED)
-      Tracer.Trace('portal', TraceLevel.HIGH, 'building routes');
+    DBG.group(`buildRouteObjects (root="${root.id}", cache size=${this.routeCache.size})`);
 
-    const hasSession = this.sessionManager.hasSession()
-
-    // Find login feature by tag
+    const hasSession = this.sessionManager.hasSession();
+    DBG.log('hasSession:', hasSession);
 
     const loginFeature = new FeatureFinder(this.featureRegistry).withTag("login").findOptional();
-
     const loginPath = loginFeature?.path ?? undefined;
 
-    const features = this.featureRegistry.filter((feature) =>(
-                feature !== root &&
-                feature.path !== undefined &&
-                feature.parent == undefined &&
-                !(feature.tags || []).includes("portal")));
+    // ── ALL features in registry ──────────────────────────────────────────────
+    const allFeatures = this.featureRegistry.filter(() => true);
+    DBG.group('All registered features:');
+    allFeatures.forEach(f =>
+      DBG.log(`  id="${f.id}"  parent="${f.parent ?? 'none'}"  path="${f.path ?? 'none'}"  children=${f.children?.length ?? 0}`)
+    );
+    DBG.end();
 
-    const build = (feature: FeatureMetadata): RouteObjectWithFeature => {
-      const isPrivate = feature.visibility && feature.visibility.includes('private') && !feature.visibility.includes('public');
+    // ── top-level features (no parent, has path, not portal) ─────────────────
+    const features = this.featureRegistry.filter((feature) => (
+      feature !== root &&
+      feature.path !== undefined &&
+      feature.parent == undefined &&
+      !(feature.tags || []).includes("portal")
+    ));
 
-      const element = (isPrivate && !hasSession) ? (
-        <PrivateRoute feature={feature} loginPath={loginPath}>
-          <FeatureOutlet id={feature.id} />
-        </PrivateRoute>
-      ) : (
-        <FeatureOutlet id={feature.id} />
+    DBG.group('Top-level features (will become direct children of root route):');
+    features.forEach(f =>
+      DBG.log(`  id="${f.id}"  path="${f.path}"  children=${f.children?.length ?? 0}`)
+    );
+    DBG.end();
+
+    // ── check for children that leaked into top-level ────────────────────────
+    const leakedChildren = features.filter(f => f.id.includes('.'));
+    if (leakedChildren.length) {
+      DBG.warn(
+        '⚠️  POTENTIAL BUG: these features have dotted ids (suggesting they are children) ' +
+        'but have no parent set — they will appear at root level AND as nested routes:',
+        leakedChildren.map(f => f.id)
       );
+    }
 
-      // Strip leading slash from path to make it relative for nested routes
-      const routePath = (feature.path || '').replace(/^\//, '');
+    // ── build the route tree ──────────────────────────────────────────────────
+    DBG.log('Building route tree...');
 
-      return {
-        path: routePath,
-        element: element,
-        $feature: feature,
-        children: (feature.children || []).map(build),
-      };
-    };
+    const rootRoute = this.buildOrReuse(root, hasSession, loginPath);
 
     this.routeObjects = [
       {
         path: root.path || '',
-        element: <FeatureOutlet key={root.id} id={root.id} />,
+        element: rootRoute.element,
         $feature: root,
         children: [
-          ...features.map(build),
-          // Catch-all error route for undefined paths
-          {
-            path: '*',
-            element: <ErrorPage />,
-            $feature: root,
-          },
+          ...features.map(f => {
+            DBG.log(`  top-level route: "${f.id}" → path="${(f.path || '').replace(/^\//, '')}"`);
+            return this.buildOrReuse(f, hasSession, loginPath);
+          }),
+          this.errorRoute,
         ],
       },
     ];
 
-    console.log(
-      '### Route tree:',
-      JSON.stringify(
-        this.routeObjects,
-        (key, value) => {
-          if (key === 'element') return '[React Element]';
-          return value;
-        },
-        2,
-      ),
-    );
+    // ── dump final route structure ────────────────────────────────────────────
+    DBG.group('Final route structure:');
+    const dumpRoutes = (routes: RouteObjectWithFeature[], indent = 0) => {
+      const pad = '  '.repeat(indent);
+      routes.forEach(r => {
+        DBG.log(`${pad}path="${r.path}"  feature="${r.$feature?.id}"  hasChildren=${r.children?.length ?? 0}`);
+        if (r.children?.length) dumpRoutes(r.children as RouteObjectWithFeature[], indent + 1);
+      });
+    };
+    dumpRoutes(this.routeObjects);
+    DBG.end();
+
+    DBG.log(`Cache now has ${this.routeCache.size} entries:`, [...this.routeCache.keys()]);
+    DBG.end(); // buildRouteObjects group
 
     return this.routeObjects;
   }
+
+  // Stable catch-all — created once, never recreated
+  private readonly errorRoute: RouteObjectWithFeature = {
+    path: '*',
+    element: <ErrorPage />,
+    $feature: { id: '__error', component: '' },
+  };
 
   public renderRouter() {
     return (
@@ -269,7 +329,6 @@ export class RouterManager {
   public getRouteObjects(): RouteObjectWithFeature[] {
     if (this.routeObjects.length === 0)
       this.buildRouteObjects(this.root);
-
     return this.routeObjects;
   }
 }
