@@ -13,20 +13,20 @@ class TestModule extends Module {
 
 describe("interpolator", () => {
     let environment : Environment
-    let interpolator: Interpolator
+    let localeManager : LocaleManager
+    let interpolator: Interpolator = new Interpolator()
 
     beforeAll(() => {
         environment = new Environment({module: TestModule})
-
-        interpolator = environment.get(Interpolator)
+        localeManager = environment.get(LocaleManager)
     })
 
     it("should interpolate", () => {
-        let value = interpolator.interpolate("Hello {world}!", { world: "world" })
+        let value = interpolator.interpolate("Hello {world}!", localeManager.getLocale(), { world: "world" })
 
         expect(value).toBe("Hello world!")
 
-        value = interpolator.interpolate("price: {price:number(style: 'currency', currency: 'EUR')}", { price: 1 })
+        value = interpolator.interpolate("price: {price:number(style: 'currency', currency: 'EUR')}", localeManager.getLocale(), { price: 1 })
 
         expect(value).toBe("price: €1.00")
     })
