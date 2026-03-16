@@ -37,6 +37,14 @@ module.exports = {
       {
         oneOf: [
           {
+            test: /\.scss$/,
+            use: [
+              "style-loader",
+              "css-loader",
+              "sass-loader"
+            ],
+          },
+          {
             test: /\.svg$/,
             type: "asset/source",
           },
