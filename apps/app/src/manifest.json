@@ -52,7 +52,31 @@
             "private",
             "public"
           ],
-          "children": []
+          "children": [],
+          "showcase": {
+            "title":       "Reactive",
+            "description": "Observable values, computed properties and reactive controllers.",
+            "group":       "Core",
+            "order":       1,
+            "docs":      "reactive-feature.docs.md",
+            "assets": [
+              {
+                "type":    "tsx",
+                "label":   "Source",
+                "path": "reactive-feature.tsx"
+              },
+              {
+                "type":    "scss",
+                "label":   "Styles",
+                "path": "reactive-feature.module.scss"
+              },
+              {
+                "type":  "json",
+                "label": "i18n EN",
+                "url":   "/i18n/portal/en-US.json"
+              }
+            ]
+          }
         },
         {
           "id": "inspector",

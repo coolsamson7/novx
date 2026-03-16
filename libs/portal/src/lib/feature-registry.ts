@@ -2,6 +2,9 @@ import { injectable} from "@novx/core";
 import {FeatureDescriptor} from "./model";
 import { LocaleManager, Translator } from '@novx/i18n';
 import { of } from 'rxjs';
+import { ComponentRegistry } from "./component-registry";
+import { ShowcaseMeta } from "./feature-decorator";
+
 
 /**
  * this is a derived interface of {@linlk FeatureDescriptor} adding technical aspects.
@@ -11,6 +14,7 @@ export interface FeatureMetadata extends FeatureDescriptor {
     children?: FeatureMetadata[];
     uri?: string; // URI of remote container, if federated
     module?: string; // module name inside remote
+    showcase?:  ShowcaseMeta
 }
 
 /**
@@ -49,6 +53,11 @@ export class FeatureRegistry {
 
             if (parent)
                 feature.id = parent.id + "." + feature.id;
+
+            if (!feature.showcase) {
+                const meta = ComponentRegistry.getMeta(feature.id);
+                if (meta?.showcase) feature.showcase = meta.showcase;
+              }
 
             // register
 

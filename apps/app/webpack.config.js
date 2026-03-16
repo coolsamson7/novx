@@ -41,7 +41,7 @@ module.exports = {
             type: "asset/source",
           },
           {
-            test: /\.(tsx?|ts|txt|css|json)$/,
+            test: /\.(tsx?|ts|txt|css|json|scss|md|html)$/,
             resourceQuery: /raw/,
             type: "asset/source",
           },
