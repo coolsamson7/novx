@@ -8,9 +8,8 @@ import { useInject } from "../environment"
  */
 export function I18NProvider(props: any) {
   // inject both services at once
-  const [translator, interpolator] = useInject(
-    Translator,
-    Interpolator
+  const [translator] = useInject(
+    Translator
   )
 
   const [counter, setCounter] = useState(0)
@@ -19,15 +18,9 @@ export function I18NProvider(props: any) {
 
   const translate = useMemo(() => {
       return (key: string, params?: any): string => {
-        let translation = translator.translate(key)
-
-        if (params) {
-          translation = interpolator.interpolate(translation, params)
-        }
-
-        return translation
+        return translator.translate(key, params)
       }
-  }, [translator, interpolator, counter])
+  }, [translator, counter])
 
   useEffect(() => {
     const subscription = translator

@@ -1,5 +1,6 @@
 import { Translations, Translator } from "../Translator"
 import { MissingTranslationHandler } from "../MissingTranslationHandler"
+import { Interpolator } from "../interpolator"
 
 /**
  * an {@link AbstractCachingTranslator} is an abstract base class for translators that cache loaded translations
@@ -9,12 +10,11 @@ export abstract class AbstractCachingTranslator extends Translator {
 
     protected cachedNamespaces: { [key: string]: any } = {}
     protected reloading = false
-    //@logger("i18n")
-    //protected logger: Logger | undefined
+    protected locale!: Intl.Locale
 
     // constructor
 
-    protected constructor(protected missingTranslationHandler: MissingTranslationHandler) {
+    protected constructor(protected missingTranslationHandler: MissingTranslationHandler, protected interpolator: Interpolator) {
         super()
     }
 
@@ -61,12 +61,18 @@ export abstract class AbstractCachingTranslator extends Translator {
     /**
      * @inheritDoc
      */
-    override translate(key: string): string {
+    override translate(key: string, params?: any): string {
         const { namespace, path } = this.extractNamespace(key)
 
         const translation = this.get<string>(this.cachedNamespaces[namespace], path)
 
-        return translation || this.missingTranslationHandler.resolve(key)
+        if ( translation ) {
+            if ( params )
+                return this.interpolator.interpolate(translation, this.locale, params)
+            else
+                return translation
+        }
+        else return this.missingTranslationHandler.resolve(key)
     }
 
     // protected

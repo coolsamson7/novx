@@ -1,4 +1,4 @@
-import { injectable } from "@novx/core"
+
 import { PlaceholderParser } from "./Parser"
 import { FormatterRegistry } from "../../format"
 import { StringBuilder, LRUCache } from '@novx/core';
@@ -34,27 +34,23 @@ const isText = (chunk: Chunk): chunk is Text => {
  * The replacements can refer to specific formatters that can respect specific formatting options.
  *
  */
-@injectable()
 export class Interpolator {
     // instance data
 
-    cache: LRUCache<(parameters: any) => string> = new LRUCache()
+    cache: LRUCache<(locale: Intl.Locale, parameters: any) => string> = new LRUCache()
     useCaching = true
-
-    // constructor
-
-    constructor(private parser: PlaceholderParser, private formatterRegistry: FormatterRegistry) {}
+    parser = new PlaceholderParser()
 
     // private
 
-    private interpolator(input: string): (parameters: any) => string {
+    private interpolator(input: string): (locale: Intl.Locale, parameters: any) => string {
         let interpolator = this.cache.get(input)
         if (!interpolator) interpolator = this.cache.put(input, this.compile(input))
 
         return interpolator
     }
 
-    private compile(input: string): (parameters: any) => string {
+    private compile(input: string): (locale: Intl.Locale, parameters: any) => string {
         const components: Chunk[] = []
 
         let start = 0
@@ -86,7 +82,7 @@ export class Interpolator {
             components.push({ start: 0, end: input.length })
         }
 
-        return (parameters: any): string => {
+        return (locale: Intl.Locale, parameters: any): string => {
             const builder = new StringBuilder()
 
             for (const element of components) {
@@ -121,7 +117,7 @@ export class Interpolator {
                         else type = typeof parameters[element.name] //
                     }
 
-                    builder.append(this.formatterRegistry.format(type, parameter, formatParams))
+                    builder.append(FormatterRegistry.format(type, parameter, locale, formatParams))
                 }
             } // for
 
@@ -131,8 +127,8 @@ export class Interpolator {
 
     // public
 
-    interpolate(input: string, parameters: any): string {
-        if (this.useCaching) return this.interpolator(input)(parameters)
+    interpolate(input: string, locale: Intl.Locale, parameters: any): string {
+        if (this.useCaching) return this.interpolator(input)(locale, parameters)
 
         let start = 0
         let index = input.indexOf("{")
@@ -149,7 +145,7 @@ export class Interpolator {
 
                 // add bracket
 
-                builder.append(this.interpolatePlaceholder(input.substring(start, index + 1), parameters))
+                builder.append(this.interpolatePlaceholder(input.substring(start, index + 1), locale, parameters))
 
                 // next
 
@@ -167,12 +163,13 @@ export class Interpolator {
         } else return input
     }
 
-    interpolatePlaceholder(input: string, parameters: any): string {
+    interpolatePlaceholder(input: string, locale: Intl.Locale, parameters: any): string {
         const placeholder = this.parser.parse(input)
 
-        return this.formatterRegistry.format(
+        return FormatterRegistry.format(
             placeholder.format!.format,
             parameters[placeholder.name],
+            locale,
             placeholder.format!.parameters
         )
     }

@@ -1,7 +1,5 @@
 ### TODO
 
-- url geht nicht, wrong port?????
-
 ### LATER
 
 - wiki documentation
@@ -27,7 +25,7 @@ class Aspects {
 Der erste around müsste execute auf command sageb?
 
 ### DONE
-
+- url geht nicht, wrong port?????
 - integrate error handling?
 - integrate commands?
 - typedescriptor

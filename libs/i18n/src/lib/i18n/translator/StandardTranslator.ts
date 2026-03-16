@@ -8,6 +8,7 @@ import { I18NLoader } from "../I18NLoader"
 import { Translations } from "../Translator"
 import { Event } from "../Translator"
 import { tap } from "rxjs/operators"
+import { Interpolator } from "../interpolator"
 
 /**
  * the {@link StandardTranslator} is a caching translator that delegates loading requests to a {@link I18NLoader}
@@ -15,13 +16,13 @@ import { tap } from "rxjs/operators"
 export class StandardTranslator extends AbstractCachingTranslator implements OnLocaleChange {
     // instance data
 
-    private locale: Intl.Locale
+    override locale: Intl.Locale
     private event: BehaviorSubject<Event> = new BehaviorSubject<Event>({ type: "initial" })
 
     // constructor
 
     constructor(private loader: I18NLoader, missingTranslationHandler: MissingTranslationHandler, localeManager: LocaleManager) {
-        super(missingTranslationHandler)
+        super(missingTranslationHandler, new Interpolator())
 
 
         // start with current locale
@@ -57,12 +58,12 @@ export class StandardTranslator extends AbstractCachingTranslator implements OnL
 
     // override
 
-    override translate$(key: string): Promise<string> {
+    override translate$(key: string, params?: any): Promise<string> {
         const { namespace } = this.extractNamespace(key)
 
         const translations = this.cachedNamespaces[namespace]
 
-        if (translations) return Promise.resolve(this.translate(key))
+        if (translations) return Promise.resolve(this.translate(key, params))
         else return this.loadNamespace(namespace).then((translations) => Promise.resolve(this.translate(key)))
     }
 

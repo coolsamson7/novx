@@ -1,7 +1,5 @@
 import { Placeholder } from './Interpolator';
-import { injectable } from '@novx/core';
 
-@injectable()
 export class PlaceholderParser {
   // instance data
 

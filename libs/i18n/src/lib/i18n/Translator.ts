@@ -48,16 +48,16 @@ export class Translator {
      * return an observable containing the translated key or the transformed key in case of missing values
      * @param key the translation key
      */
-    translate$(key: string): Promise<string>{
-      throw Error('ocuh');
+    translate$(key: string, params?: any): Promise<string>{
+      throw Error('NYI');
     }
 
     /**
      * return the i18n value or the transformed key in case of missing values
      * @param key
      */
-    translate(key: string): string{
-      throw Error('ocuh');
+    translate(key: string, params?: any): string{
+      throw Error('NYI');
     }
 
     /**
