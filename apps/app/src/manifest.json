@@ -105,6 +105,7 @@
           "component": "I18NFeature",
           "sourceFile": "apps/app/src/showcases/i18n-feature.tsx",
           "parent": "showcases",
+          "preloadI18n": ["showcases"],
           "description": "i18n",
           "tags": [
             "showcase"
@@ -115,7 +116,26 @@
             "private",
             "public"
           ],
-          "children": []
+          "children": [],
+          "showcase": {
+            "title":       "I18N",
+            "description": "i18n.",
+            "group":       "Core",
+            "order":       1,
+            "docs":      "i18n-feature.md",
+            "assets": [
+              {
+                "type":    "tsx",
+                "label":   "Source",
+                "path": "i18n-feature.tsx"
+              },
+              {
+                "type":  "json",
+                "label": "i18n EN",
+                "url":   "/i18n/showcases/en-US.json"
+              }
+            ]
+          }
         },
         {
           "id": "environment",

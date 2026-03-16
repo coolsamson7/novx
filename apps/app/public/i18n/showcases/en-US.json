@@ -1,0 +1,17 @@
+{
+  "hello": {
+    "label": "Hello"
+  },
+  "world": {
+    "label": "World"
+  },
+  "hello_user": {
+    "label": "Hallo {user}"
+  },
+  "todays_price": {
+    "label": "the price on {today:date} is {price:number(style: 'currency', currency: 'EUR')}"
+  },
+  "home": {
+    "label": "Home"
+  }
+}

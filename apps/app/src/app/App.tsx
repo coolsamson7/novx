@@ -5,7 +5,6 @@ import { DeploymentManager, EnvironmentContext, Feature, I18NProvider, RouterMan
 import TraceFooter from '../component/trace-footer';
 import { FooterTrace } from '../module';
 
-
 export class App extends React.Component {
     state = {ready: false};
     routerManager!: RouterManager;
