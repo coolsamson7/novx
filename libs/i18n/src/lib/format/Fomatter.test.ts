@@ -24,11 +24,10 @@ describe("Formatter", () => {
         const environment = new Environment({module: TestModule})
 
         localeManager = environment.get(LocaleManager);
-        formatterRegistry = environment.get(FormatterRegistry);
     })
 
     it("should format numbers", () => {
-        const value = formatterRegistry.format("number", 47.11, { style: "currency", currency: "EUR" })
+        const value = FormatterRegistry.format("number", 47.11, localeManager.getLocale(), { style: "currency", currency: "EUR" })
 
         console.log(value)
     })
