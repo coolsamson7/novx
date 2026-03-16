@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { injectable, onRunning } from "@novx/core";
 import {
   Feature,
@@ -631,6 +633,9 @@ const ShowcasePageContent: React.FC = () => {
     && activeTab !== 'docs'
     && (view === 'split' || view === 'code');
 
+    const normalizeLang = (type: string) =>
+      type === 'md' ? 'markdown' : type;
+
   const showDocs = activeTab === 'docs' && hasDocs;
 
   const bodyClass = [
@@ -785,9 +790,21 @@ const ShowcasePageContent: React.FC = () => {
                     className="sc-code-scroll"
                     key={selectedId + '-code-' + activeAssetIndex}
                   >
-                    <pre className="sc-code">
+                    <SyntaxHighlighter
+                      language={normalizeLang(activeAsset.type)}   // 'tsx', 'ts', 'css', 'scss', 'json', 'markdown'
+                      style={oneDark}
+                      customStyle={{
+                        margin: 0,
+                        background: 'var(--code-bg)',
+                        fontSize: '0.78rem',
+                        lineHeight: '1.7',
+                        fontFamily: 'var(--mono)',
+                      }}
+                      showLineNumbers: false
+                      wrapLongLines={false}
+                    >
                       {getAssetContent(activeAsset, activeAssetIndex!)}
-                    </pre>
+                    </SyntaxHighlighter>
                   </div>
                 </div>
               )}
